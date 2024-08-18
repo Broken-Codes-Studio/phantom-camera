@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 [Tool]
-public partial class phantom_camera : EditorPlugin
+public partial class Plugin : EditorPlugin
 {
 	public override void _EnterTree()
 	{
