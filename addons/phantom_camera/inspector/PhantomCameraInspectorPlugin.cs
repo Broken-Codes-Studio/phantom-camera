@@ -2,6 +2,8 @@
 using Godot;
 using System;
 
+namespace PhantomCamera.Inspector;
+
 [Tool]
 public partial class PhantomCameraInspectorPlugin : EditorInspectorPlugin
 {

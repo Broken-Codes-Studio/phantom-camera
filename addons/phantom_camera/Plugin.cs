@@ -2,6 +2,8 @@
 using Godot;
 using System;
 
+namespace PhantomCamera;
+
 [Tool]
 public partial class Plugin : EditorPlugin
 {

@@ -2,6 +2,8 @@ using Godot;
 using Godot.NativeInterop;
 using System;
 
+namespace PhantomCamera.Gizmo;
+
 public partial class CustomPluginGizmo : EditorNode3DGizmoPlugin
 {
 

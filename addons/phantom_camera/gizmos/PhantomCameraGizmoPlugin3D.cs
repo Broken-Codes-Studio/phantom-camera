@@ -1,6 +1,8 @@
 using Godot;
 using System;
 
+namespace PhantomCamera.Gizmo;
+
 public partial class PhantomCameraGizmoPlugin3D : CustomPluginGizmo
 {
 	
