@@ -6,9 +6,18 @@ namespace PhantomCamera.Resources;
 
 public enum ProjectionType : byte
 {
-    PERSPECTIVE = 0, // Perspective projection. Objects on the screen becomes smaller when they are far away.
-    ORTHOGONAL = 1, // Orthogonal projection, also known as orthographic projection. Objects remain the same size on the screen no matter how far away they are.
-    FRUSTUM = 2, // Frustum projection. This mode allows adjusting frustum_offset to create "tilted frustum" effects.
+    /// <summary>
+    /// Perspective projection. Objects on the screen becomes smaller when they are far away.
+    /// </summary>
+    PERSPECTIVE = 0,
+    /// <summary>
+    /// Orthogonal projection, also known as orthographic projection. Objects remain the same size on the screen no matter how far away they are.
+    /// </summary>
+    ORTHOGONAL = 1,
+    /// <summary>
+    /// Frustum projection. This mode allows adjusting frustum_offset to create "tilted frustum" effects.
+    /// </summary>
+    FRUSTUM = 2,
 }
 
 /// <summary>
@@ -26,48 +35,69 @@ public partial class Camera3DResource : Resource
         [PhantomCamera3D] becoming active.
     */
 
-    // Overrides [member Camera3D.cull_mask].
+    /// <summary>
+    /// Overrides [member Camera3D.cull_mask].
+    /// </summary>
     [Export(PropertyHint.Layers3DRender)]
     public int cull_mask = 1048575;
 
-    //Overrides [member Camera3D.h_offset].
+    /// <summary>
+    /// Overrides [member Camera3D.h_offset].
+    /// </summary>
     [Export(PropertyHint.Range, "0,1,0.001,hide_slider,suffix:m")]
     public float h_offset = 0f;
-    // Overrides [member Camera3D.v_offset].
+    /// <summary>
+    /// Overrides [member Camera3D.v_offset].
+    /// </summary>
     [Export(PropertyHint.Range, "0,1,0.001,hide_slider,suffix:m")]
     public float v_offset = 0f;
 
-    // Overrides [member Camera3D.projection].
+    private ProjectionType _projection = ProjectionType.PERSPECTIVE;
+    /// <summary>
+    /// Overrides [member Camera3D.projection].
+    /// </summary>
     [Export]
     public ProjectionType projection
     {
-        get => projection;
+        get => _projection;
         set
         {
-            projection = value;
+            _projection = value;
             NotifyPropertyListChanged();
         }
     }
 
-    //Overrides [member Camera3D.fov].
+    /// <summary>
+    /// Overrides [member Camera3D.fov].
+    /// </summary>
     [Export(PropertyHint.Range, "1,179,0.1,degrees")]
     public float fov = 75f;
 
-    // Overrides [member Camera3D.size].
+    /// <summary>
+    /// Overrides [member Camera3D.size].
+    /// </summary>
     [Export(PropertyHint.Range, "0.001,100,0.001,suffix:m,or_greater")]
     public float size = 1f;
 
-    // Overrides [member Camera3d.frustum_offset].
+    /// <summary>
+    /// Overrides [member Camera3d.frustum_offset].
+    /// </summary>
     [Export]
     public Vector2 frustum_offset = Vector2.Zero;
 
-    // Overrides [member Camera3D.near].
+    /// <summary>
+    /// Overrides [member Camera3D.near].
+    /// </summary>
     [Export(PropertyHint.Range, "0.001,10,0.001,suffix:m,or_greater")]
     public float near = 0.05f;
 
-    // Overrides [member Camera3D.far].
+    /// <summary>
+    /// Overrides [member Camera3D.far].
+    /// </summary>
     [Export(PropertyHint.Range, "0.01,4000,0.001,suffix:m,or_greater")]
     public float far = 4000f;
+
+    public Camera3DResource() { }
 
     public override void _ValidateProperty(Dictionary property)
     {
