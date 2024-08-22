@@ -1,6 +1,5 @@
 using Godot;
 using PhantomCamera.Resources;
-using System;
 
 namespace PhantomCamera;
 
@@ -412,7 +411,8 @@ public partial class PhantomCamera3D : Node3D
         set => TweenResource.transition = value;
     }
 
-    public EaseType TweenEase{
+    public EaseType TweenEase
+    {
         get => TweenResource.ease;
         set => TweenResource.ease = value;
     }
@@ -426,7 +426,7 @@ public partial class PhantomCamera3D : Node3D
     /// disable this behaviour and skip the tweening entirely when instantiated.
     /// </summary>
     [Export]
-    public bool TweenOnLoad {get; set;} = true;
+    public bool TweenOnLoad { get; set; } = true;
 
     /// <summary>
     /// Determines how often an inactive [param PhantomCamera3D] should update
@@ -435,7 +435,7 @@ public partial class PhantomCamera3D : Node3D
     /// to improve performance.
     /// </summary>
     [Export]
-    public InactiveUpdateMode inactiveUpdateMode {get; set;} = InactiveUpdateMode.ALWAYS;
+    public InactiveUpdateMode inactiveUpdateMode { get; set; } = InactiveUpdateMode.ALWAYS;
 
     #region Camera3DResouce property getters
 
@@ -443,21 +443,375 @@ public partial class PhantomCamera3D : Node3D
     /// A resource type that allows for overriding the [param Camera3D] node's properties.
     /// </summary>
     [Export]
-    public Camera3DResource camera3DResource {get;set;} = new();
+    public Camera3DResource camera3DResource { get; set; } = new();
 
-    public int CullMask {
-        get => camera3DResource.cull_mask;
-        set{
-            camera3DResource.cull_mask = value;
+    public uint CullMask
+    {
+        get => camera3DResource.CullMask;
+        set
+        {
+            camera3DResource.CullMask = value;
             // if(IsActive)
-            //     PcamHostOwner.Camera3DCullMask = value;
+            //     PcamHostOwner.camera3D.cull_mask = value;
         }
     }
 
-    //TODO: Add Rest of the variables
+    public float H_Offset
+    {
+        get => camera3DResource.H_Offset;
+        set
+        {
+            camera3DResource.H_Offset = value;
+            // if(IsActive)
+            //     PcamHostOwner.camera3D.h_offset = value;
+        }
+    }
+
+    public float V_Offset
+    {
+        get => camera3DResource.V_Offset;
+        set
+        {
+            camera3DResource.V_Offset = value;
+            // if(IsActive)
+            //     PcamHostOwner.camera3D.V_Offset = value;
+        }
+    }
+
+    public ProjectionType Projection
+    {
+        get => camera3DResource.Projection;
+        set
+        {
+            camera3DResource.Projection = value;
+            // if(IsActive)
+            //     PcamHostOwner.camera3D.Projection = value;
+        }
+    }
+
+    public float FOV
+    {
+        get => camera3DResource.FOV;
+        set
+        {
+            camera3DResource.FOV = value;
+            // if(IsActive)
+            //     PcamHostOwner.camera3D.FOV = value;
+        }
+    }
+
+    public float Size
+    {
+        get => camera3DResource.Size;
+        set
+        {
+            camera3DResource.Size = value;
+            // if(IsActive)
+            //     PcamHostOwner.camera3D.Size = value;
+        }
+    }
+
+    public Vector2 FrustumOffset
+    {
+        get => camera3DResource.FrustumOffset;
+        set
+        {
+            camera3DResource.FrustumOffset = value;
+            // if(IsActive)
+            //     PcamHostOwner.camera3D.FrustumOffset = value;
+        }
+    }
+
+    public float Far
+    {
+        get => camera3DResource.Far;
+        set
+        {
+            camera3DResource.Far = value;
+            // if(IsActive)
+            //     PcamHostOwner.camera3D.Far = value;
+        }
+    }
+
+    public float Near
+    {
+        get => camera3DResource.Near;
+        set
+        {
+            camera3DResource.Near = value;
+            // if(IsActive)
+            //     PcamHostOwner.camera3D.Near = value;
+        }
+    }
 
     #endregion
 
+    /// <summary>
+    /// Overrides the [member Camera3D.environment] resource property.
+    /// </summary>
+    [Export]
+    public Environment Environment { get; set; } = null;
+
+    /// <summary>
+    /// Overrides the [member Camera3D.attribuets] resource property.
+    /// </summary>
+    [Export]
+    public CameraAttributes Attributes { get; set; } = null;
+
+    /// <summary>
+    /// Offsets the [member follow_target] position.
+    /// </summary>
+    [ExportGroup("Follow Parameters")]
+    [Export]
+    public Vector3 FollowOffset { get; set; } = Vector3.Zero;
+
+    private bool _followDamping = false;
+    /// <summary>
+    /// Applies a damping effect on the camera's movement.
+    /// Leading to heavier / slower camera movement as the targeted node moves around.
+    /// This is useful to avoid sharp and rapid camera movement.
+    /// </summary>
+    [Export]
+    public bool FollowDamping
+    {
+        get => _followDamping;
+        set
+        {
+            _followDamping = value;
+            NotifyPropertyListChanged();
+        }
+    }
+
+    private Vector3 _followDampingValue = new(.1f, .1f, .1f);
+    /// <summary>
+    /// Defines the damping amount. The ideal range should be somewhere between 0-1.<br/>
+    /// The damping amount can be specified in the individual axis.<br/>
+    /// <b>Lower value</b> = faster / sharper camera movement.<br/>
+    /// <b>Higher value</b> = slower / heavier camera movement.
+    /// </summary>
+    [Export]
+    public Vector3 FollowDampingValue
+    {
+        get => _followDampingValue;
+        set
+        {
+            var theValue = value;
+            theValue.X = value.X < 0 ? 0 : value.X;
+            theValue.Y = value.Y < 0 ? 0 : value.Y;
+            theValue.Z = value.Z < 0 ? 0 : value.Z;
+
+            _followDampingValue = theValue;
+        }
+    }
+
+    /// <summary>
+    /// Sets a distance offset from the centre of the target's position.
+    /// The distance is applied to the [param PhantomCamera3D]'s local z axis.
+    /// </summary>
+    [Export]
+    public float FollowDistance { get; set; } = 1f;
+
+    private bool _autoFollowDistance = false;
+    /// <summary>
+    /// Enables the [param PhantomCamera3D] to automatically distance
+    /// itself as the [param follow targets] move further apart.<br/>
+    /// It looks at the longest axis between the different targets and interpolates
+    /// the distance length between the [member auto_follow_distance_min] and
+    /// [member follow_group_distance] properties.<br/>
+    /// <b>Note:</b> Enabling this property hides and disables the [member follow_distance]
+    /// property as this effectively overrides that property.
+    /// </summary>
+    [Export]
+    public bool AutoFollowDistance
+    {
+        get => _autoFollowDistance;
+        set
+        {
+            _autoFollowDistance = value;
+            NotifyPropertyListChanged();
+        }
+    }
+
+    /// <summary>
+    /// Sets the minimum distance between the Camera and centre of [AABB].<br/>
+    /// <b>Note:</b> This distance will only ever be reached when all the targets are in
+    /// the exact same [param Vector3] coordinate, which will very unlikely
+    /// happen, so adjust the value here accordingly.
+    /// </summary>
+    [Export]
+    public float AutoFollowDistanceMin { get; set; } = 1f;
+
+    /// <summary>
+    /// Sets the maximum distance between the Camera and centre of [AABB].
+    /// </summary>
+    [Export]
+    public float AutoFollowDistanceMax { get; set; } = 5f;
+
+    /// <summary>
+    /// Determines how fast the [member auto_follow_distance] moves between the
+    /// maximum and minimum distance. The higher the value, the sooner the
+    /// maximum distance is reached.<br/>
+    /// This value should be based on the sizes of the [member auto_follow_distance_min]
+    /// and [member auto_follow_distance_max].<br/>
+    /// E.g. if the value between the [member auto_follow_distance_min] and
+    /// [member auto_follow_distance_max] is small, consider keeping the number low
+    /// and vice versa.
+    /// </summary>
+    [Export]
+    public float AutoFollowDistanceDivisor { get; set; } = 10f;
+
+    private float _deadZoneWidth = 0f;
+    /// <summary>
+    /// Defines the horizontal dead zone area. While the target is within it, the
+    /// [param PhantomCamera3D] will not move in the horizontal axis.
+    /// If the targeted node leaves the horizontal bounds, the
+    /// [param PhantomCamera3D] will follow the target horizontally to keep
+    /// it within bounds.
+    /// </summary>
+    [ExportSubgroup("Dead Zones")]
+    [Export(PropertyHint.Range, "0,1")]
+    public float DeadZoneWidth
+    {
+        get => _deadZoneWidth;
+        set
+        {
+            _deadZoneWidth = value;
+            EmitSignal(SignalName.DeadZoneChanged);
+        }
+    }
+
+    private float _deadZoneheight = 0f;
+    /// <summary>
+    /// Defines the vertical dead zone area. While the target is within it, the
+    /// [param PhantomCamera3D] will not move in the vertical axis.
+    /// If the targeted node leaves the vertical bounds, the
+    /// [param PhantomCamera3D] will follow the target horizontally to keep
+    /// it within bounds.
+    /// </summary>
+    [ExportSubgroup("Dead Zones")]
+    [Export(PropertyHint.Range, "0,1")]
+    public float DeadZoneheight
+    {
+        get => _deadZoneheight;
+        set
+        {
+            _deadZoneheight = value;
+            EmitSignal(SignalName.DeadZoneChanged);
+        }
+    }
+
+    /// <summary>
+    /// Defines the position of the [member follow_target] within the viewport.<br/>
+    /// This is only used for when [member follow_mode] is set to [param Framed].
+    /// </summary>
+    public Vector2 ViewportPosition { get; set; }
+
+    /// <summary>
+    /// Defines the [member SpringArm3D.spring_length].
+    /// </summary>
+    [ExportSubgroup("Spring Arm")]
+    [Export]
+    public float SpringLength
+    {
+        get => FollowDistance;
+        set
+        {
+            FollowDistance = value;
+            if (_followSpringArm != null && IsInstanceValid(_followSpringArm))
+                _followSpringArm.SpringLength = FollowDistance;
+        }
+    }
+
+    private uint _collisionMask = 1;
+    /// <summary>
+    /// Defines the [member SpringArm3D.collision_mask] node's Collision Mask.
+    /// </summary>
+    [Export(PropertyHint.Layers3DPhysics)]
+    public uint CollisionMask
+    {
+        get => _collisionMask;
+        set
+        {
+            _collisionMask = value;
+            if (_followSpringArm != null && IsInstanceValid(_followSpringArm))
+                _followSpringArm.CollisionMask = _collisionMask;
+        }
+    }
+
+    private Shape3D _shape = null;
+    /// <summary>
+    /// Defines the [member SpringArm3D.shape] node's Shape3D.
+    /// </summary>
+    [Export]
+    public Shape3D Shape
+    {
+        get => _shape;
+        set
+        {
+            _shape = value;
+            if (_followSpringArm != null && IsInstanceValid(_followSpringArm))
+                _followSpringArm.Shape = _shape;
+        }
+    }
+
+    private float _margin = 0.01f;
+    /// <summary>
+    /// Defines the [member SpringArm3D.shape] node's Shape3D.
+    /// </summary>
+    [Export]
+    public float Margin
+    {
+        get => _margin;
+        set
+        {
+            _margin = value;
+            if (_followSpringArm != null && IsInstanceValid(_followSpringArm))
+                _followSpringArm.Margin = _margin;
+        }
+    }
+
+    /// <summary>
+    /// Offsets the target's [param Vector3] position that the
+    /// [param PhantomCamera3D] is looking at.
+    /// </summary>
+    [ExportGroup("Look At Parameters")]
+    [Export]
+    public Vector3 LookAtOffset { get; set; } = Vector3.Zero;
+
+    private bool _lookAtDamping = false;
+    /// <summary>
+    /// Applies a damping effect on the camera's rotation.
+    /// Leading to heavier / slower camera movement as the targeted node moves around.
+    /// This is useful to avoid sharp and rapid camera rotation.
+    /// </summary>
+    [Export]
+    public bool LookAtDamping
+    {
+        get => _lookAtDamping;
+        set
+        {
+            _lookAtDamping = value;
+            NotifyPropertyListChanged();
+        }
+    }
+
+    /// <summary>
+    /// Defines the Rotational damping amount. The ideal range is typicall somewhere between 0-1.<br/>
+    /// The damping amount can be specified in the individual axis.<br/>
+    /// <b>Lower value</b> = faster / sharper camera rotation.<br/>
+    /// <b>Higher value</b> = slower / heavier camera rotation.
+    /// </summary>
+    [Export(PropertyHint.Range, "0.0,1.0,0.001,or_greater")]
+    public float LookAtDampingValue { get; set; } = .25f;
+
+    /// <summary>
+    /// Enables the dead zones to be visible when running the game from the editor.
+    /// Dead zones will never be visible in build exports.
+    /// </summary>
+    [Export]
+    public bool showViewFinderInPlay = false;
+
+    #region Private Fields
     private bool _shouldFollow = false;
     private bool _followTargetPhysicsBased = false;
     private bool _physicsInterpolationEnabled = false;
@@ -465,16 +819,21 @@ public partial class PhantomCamera3D : Node3D
     private bool _shouldLookAt = false;
     private bool _hasMultipleFollowTargets = false;
 
-    private Node3D[] _validLookAtTargets;
+    private Node3D[] _validLookAtTargets = { };
 
     private bool _tweenSkip = false;
 
     private Vector3 _followVelocityRef = Vector3.Zero;
 
-    private Vector3 _currentRotation;
+    private bool _followFramedInitialSet = false;
+    private Vector3 _followFramedOffset = Vector3.Zero;
 
-    private Node _phantomCameraManager;
+    private SpringArm3D _followSpringArm = null;
 
+    private Vector3 _currentRotation = Vector3.Zero;
+
+    private Node _phantomCameraManager = null;
+    #endregion
     #endregion
 
     #region Property Validator
