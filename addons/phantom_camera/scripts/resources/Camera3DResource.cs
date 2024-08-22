@@ -99,6 +99,8 @@ public partial class Camera3DResource : Resource
 
     public Camera3DResource() { }
 
+#if TOOLS
+
     public override void _ValidateProperty(Dictionary property)
     {
         if (property["name"].AsStringName() == "fov" && Projection != ProjectionType.PERSPECTIVE)
@@ -110,5 +112,7 @@ public partial class Camera3DResource : Resource
         if (property["name"].AsStringName() == "frustum_offset" && Projection != ProjectionType.FRUSTUM)
             property["usage"] = (int)PropertyUsageFlags.NoEditor;
     }
+
+#endif
 
 }

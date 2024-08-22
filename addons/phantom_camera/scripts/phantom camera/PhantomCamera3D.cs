@@ -1,4 +1,5 @@
 using Godot;
+using Godot.Collections;
 using PhantomCamera.Resources;
 
 namespace PhantomCamera;
@@ -690,7 +691,7 @@ public partial class PhantomCamera3D : Node3D
     /// </summary>
     [ExportSubgroup("Dead Zones")]
     [Export(PropertyHint.Range, "0,1")]
-    public float DeadZoneheight
+    public float DeadZoneHeight
     {
         get => _deadZoneheight;
         set
@@ -809,7 +810,7 @@ public partial class PhantomCamera3D : Node3D
     /// Dead zones will never be visible in build exports.
     /// </summary>
     [Export]
-    public bool showViewFinderInPlay = false;
+    public bool ShowViewFinderInPlay = false;
 
     #region Private Fields
     private bool _shouldFollow = false;
@@ -836,7 +837,133 @@ public partial class PhantomCamera3D : Node3D
     #endregion
     #endregion
 
+#if TOOLS
     #region Property Validator
+
+    public override void _ValidateProperty(Dictionary property)
+    {
+        #region Follow Target
+
+        if (property["name"].AsStringName() == "FollowTarget")
+            if (followMode is FollowMode.NONE or FollowMode.GROUP)
+                property["usage"] = (int)PropertyUsageFlags.NoEditor;
+
+        if (property["name"].AsStringName() == "FollowPath" && followMode is not FollowMode.PATH)
+            property["usage"] = (int)PropertyUsageFlags.NoEditor;
+
+        #endregion
+
+        #region Follow Parameters
+
+        if (followMode == FollowMode.NONE)
+            switch (property["name"].AsStringName())
+            {
+                case "FollowOffset":
+                case "FollowDamping":
+                case "FollowDampingValue":
+                    property["usage"] = (int)PropertyUsageFlags.NoEditor;
+                    break;
+            }
+
+        if (property["name"].AsStringName() == "FollowOffset")
+            if (followMode is FollowMode.PATH or FollowMode.GLUED)
+                property["usage"] = (int)PropertyUsageFlags.NoEditor;
+
+        if (property["name"].AsStringName() == "FollowDampingValue" && !FollowDamping)
+            property["usage"] = (int)PropertyUsageFlags.NoEditor;
+
+        if (property["name"].AsStringName() == "FollowDistance")
+            if (followMode is not FollowMode.FRAMED)
+                if (followMode is not FollowMode.GROUP || AutoFollowDistance)
+                    property["usage"] = (int)PropertyUsageFlags.NoEditor;
+
+        #endregion
+
+        #region Group Follow
+
+        if (property["name"].AsStringName() == "FollowTargets" && followMode != FollowMode.GROUP)
+            property["usage"] = (int)PropertyUsageFlags.NoEditor;
+
+        if (property["name"].AsStringName() == "AutoFollowDistance" && followMode != FollowMode.GROUP)
+            property["usage"] = (int)PropertyUsageFlags.NoEditor;
+
+        if (!AutoFollowDistance)
+            switch (property["name"].AsStringName())
+            {
+                case "AutoFollowDistanceMin":
+                case "AutoFollowDistanceMax":
+                case "AutoFollowDistanceDivisor":
+                    property["usage"] = (int)PropertyUsageFlags.NoEditor;
+                    break;
+            }
+
+        #endregion
+
+        #region Framed Follow
+
+        if (followMode is not FollowMode.FRAMED)
+            switch (property["name"].AsStringName())
+            {
+                case "DeadZoneWidth":
+                case "DeadZoneHeight":
+                case "ShowViewFinderInPlay":
+                    property["usage"] = (int)PropertyUsageFlags.NoEditor;
+                    break;
+            }
+
+        #endregion
+
+        #region Third Person Follow
+
+        if (followMode is not FollowMode.THIRD_PERSON)
+            switch (property["name"].AsStringName())
+            {
+                case "SpringLength":
+                case "CollisionMask":
+                case "Shape":
+                case "Margin":
+                    property["usage"] = (int)PropertyUsageFlags.NoEditor;
+                    break;
+            }
+
+        #endregion
+
+        #region Look At
+
+        if (lookAtMode is LookAtMode.NONE)
+            switch (property["name"].AsStringName())
+            {
+                case "LookAtTarget":
+                case "LookAtOffset":
+                case "LookAtDamping":
+                case "LookAtDampingValue":
+                    property["usage"] = (int)PropertyUsageFlags.NoEditor;
+                    break;
+            }
+        else if (lookAtMode is LookAtMode.GROUP)
+            if (property["name"].AsStringName() == "LookAtTarget")
+                property["usage"] = (int)PropertyUsageFlags.NoEditor;
+
+        if (property["name"].AsStringName() == "LookAtTarget")
+            if (lookAtMode is LookAtMode.NONE or LookAtMode.GROUP)
+                property["usage"] = (int)PropertyUsageFlags.NoEditor;
+
+        if (property["name"].AsStringName() == "LookAtTargets" && lookAtMode is not LookAtMode.GROUP)
+            property["usage"] = (int)PropertyUsageFlags.NoEditor;
+
+        if (property["name"].AsStringName() == "LookAtDampingValue" && !LookAtDamping)
+            property["usage"] = (int)PropertyUsageFlags.NoEditor;
+
+        #endregion
+
+        NotifyPropertyListChanged();
+
+    }
+
+    #endregion
+#endif
+
+    #region Methods
 
     private bool HasValidPcamOwner()
     {
@@ -848,6 +975,7 @@ public partial class PhantomCamera3D : Node3D
         //     return false;
         return true;
     }
+
 
     #endregion
 
