@@ -11,7 +11,7 @@ public static class PhantomCameraConstants
     public static readonly StringName CAMERA_2D_NODE_NAME = "Camera2D";
     public static readonly StringName CAMERA_3D_NODE_NAME = "Camera3D";
     public static readonly StringName PCAM_HOST_NODE_NAME = "PhantomCameraHost";
-    public static readonly StringName PCAM_MANAGER_NODE_NAME = "PhantomCameraManager";
+    public static readonly string PCAM_MANAGER_NODE_NAME = "PhantomCameraManager";
     public static readonly StringName PCAM_2D_NODE_NAME = "PhantomCamera2D";
     public static readonly StringName PCAM_3D_NODE_NAME = "PhantomCamera3D";
     public static readonly StringName PCAM_HOST = "phantom_camera_host";

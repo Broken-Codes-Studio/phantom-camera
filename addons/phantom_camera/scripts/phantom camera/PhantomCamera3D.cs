@@ -2,8 +2,9 @@ using Godot;
 using Godot.Collections;
 using PhantomCamera.Resources;
 
-namespace PhantomCamera;
+namespace PhantomCamera.ThreeDimension;
 
+#region Enums
 /// <summary>
 /// Determines the positional logic for a given [param PhantomCamera3D]
 /// <br/>
@@ -85,6 +86,8 @@ public enum InactiveUpdateMode
     NEVER,
     //	EXPONENTIALLY,
 }
+
+#endregion
 
 /// <summary>
 /// Controls a scene's [Camera3D] and applies logic to it.
@@ -268,7 +271,9 @@ public partial class PhantomCamera3D : Node3D
         get => _followTarget;
         set
         {
-            if (_followTarget.Equals(value))
+
+
+            if (_followTarget is not null && _followTarget.Equals(value))
                 return;
             _followTarget = value;
 
@@ -964,6 +969,48 @@ public partial class PhantomCamera3D : Node3D
 #endif
 
     #region Methods
+
+    public override void _EnterTree()
+    {
+        _phantomCameraManager = GetTree().Root.GetNode(PhantomCameraConstants.PCAM_MANAGER_NODE_NAME);
+        //_phantomCameraManager.PcamAdded(this);
+        
+    }
+
+    public override void _ExitTree()
+    {
+
+    }
+
+    public override void _Ready()
+    {
+
+    }
+
+    public override void _Process(double delta)
+    {
+
+    }
+
+    public override void _PhysicsProcess(double delta)
+    {
+
+    }
+
+    private void ProcessLogic(double delta)
+    {
+
+    }
+
+    private void Follow(double delta)
+    {
+
+    }
+
+    private void Lookat()
+    {
+
+    }
 
     private bool HasValidPcamOwner()
     {
