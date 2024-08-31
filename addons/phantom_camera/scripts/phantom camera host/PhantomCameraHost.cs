@@ -183,11 +183,96 @@ public partial class PhantomCameraHost : Node
     #endregion
 
     // NOTE: Temp solution until Godot has better plugin autoload recognition out-of-the-box.
-    private Node _phantom_camera_manager;
+    private PhantomCameraManager _phantom_camera_manager;
 
-    #region Private Functions
+    #region Private Methods
 
+    private void _checkCameraHostAmount()
+    {
 
+        //_multiple_pcam_host = _phantom_camera_manager.GetPhantomCameraHosts().Size > 1 ? true : false;
+
+    }
+
+    #endregion
+
+    #region Override Methods
+
+    public override string[] _GetConfigurationWarnings()
+    {
+        Node parent = GetParent();
+
+        if (_is_2D)
+        {
+            if (parent is not Camera2D)
+                return ["Needs to be a child of a Camera2D in order to work."];
+            else
+                return [];
+        }
+        else
+        {
+            if (parent is not Camera3D)
+                return ["Needs to be a child of a Camera3D in order to work."];
+            else
+                return [];
+        }
+
+    }
+
+    public override void _EnterTree()
+    {
+        _phantom_camera_manager = GetTree().Root.GetNode<PhantomCameraManager>(PhantomCameraConstants.PCAM_MANAGER_NODE_NAME);
+
+        Node parent = GetParent();
+
+        if (parent is not Camera2D or Camera3D)
+            return;
+
+        _is_child_of_camera = true;
+
+        if (parent is Camera2D parent2D)
+        {
+            _is_2D = true;
+            camera2D = parent2D;
+            // Force applies position smoothing to be disabled
+            // This is to prevent overlap with the interpolation of the PCam2D.
+            camera2D.PositionSmoothingEnabled = false;
+        }
+        else if (parent is Camera3D parent3D)
+        {
+            _is_2D = false;
+            camera3D = parent3D;
+
+            // Clears existing resource on Camera3D to prevent potentially messing with external Attribute resource
+            if (camera3D.Attributes != null && !Engine.IsEditorHint())
+                camera3D.Attributes = null;
+        }
+
+        // _phantom_camera_manager.pcamHostAdded(this);
+
+        _checkCameraHostAmount();
+
+    }
+
+    public override void _ExitTree()
+    {
+
+    }
+
+    public override void _Ready()
+    {
+
+    }
+
+    public override void _Process(double delta)
+    {
+
+    }
+
+    public override void _PhysicsProcess(double delta)
+    {
+
+    }
 
     #endregion
 
