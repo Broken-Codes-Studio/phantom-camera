@@ -189,9 +189,7 @@ public partial class PhantomCameraHost : Node
 
     private void _checkCameraHostAmount()
     {
-
-        //_multiple_pcam_host = _phantom_camera_manager.GetPhantomCameraHosts().Size > 1 ? true : false;
-
+        _multiple_pcam_host = _phantom_camera_manager.PhantomCameraHosts.Length > 1 ? true : false;
     }
 
     #endregion
@@ -248,7 +246,7 @@ public partial class PhantomCameraHost : Node
                 camera3D.Attributes = null;
         }
 
-        // _phantom_camera_manager.pcamHostAdded(this);
+        _phantom_camera_manager.PcamAdded(this);
 
         _checkCameraHostAmount();
 

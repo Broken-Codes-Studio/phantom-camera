@@ -26,9 +26,14 @@ public partial class PhantomCameraManager : Node
         Engine.PhysicsJitterFix = 0;
     }
 
-    public void PcamHostRemoved(PhantomCameraHost caller)
+    public void PcamHostAdded(PhantomCameraHost caller)
     {
         _phantomCameraHosts.Add(caller);
+    }
+
+    public void PcamHostRemoved(PhantomCameraHost caller)
+    {
+        _phantomCameraHosts.Remove(caller);
     }
 
     public void PcamAdded(Node caller, int hostSlot = 0)
