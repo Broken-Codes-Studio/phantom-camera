@@ -50,11 +50,11 @@ public partial class PhantomCameraHost : Node
 
     private List<Node> _pcam_list = new();
 
-    private PhantomCamera2D _activate_pcam_2d = null;
-    private PhantomCamera3D _activate_pcam_3d = null;
+    private PhantomCamera2D _active_pcam_2d = null;
+    private PhantomCamera3D _active_pcam_3d = null;
 
     private int _active_pcam_priority = -1;
-    private bool _activate_pcam_mission = true;
+    private bool _active_pcam_missing = true;
     private bool _active_pcam_has_damping = false;
     private bool _follow_target_physics_based = false;
 
@@ -192,6 +192,82 @@ public partial class PhantomCameraHost : Node
         _multiple_pcam_host = _phantom_camera_manager.PhantomCameraHosts.Length > 1 ? true : false;
     }
 
+    private void _assignNewActivePcam(Node pcam)
+    {
+        bool noPreviousPcam = false;
+
+        if (IsInstanceValid(_active_pcam_2d) || IsInstanceValid(_active_pcam_3d))
+        {
+            if (_is_2D)
+            {
+                _prev_active_pcam_2D_transform = camera2D.GlobalTransform;
+                _active_pcam_2d.QueueRedraw();
+                // _active_pcam_2d.SetIsActive(this, false);
+                //_active_pcam_2d.EmitSignal(SignalName.BecomeInactive);
+
+                // if (_trigger_pcam_tween)
+                //     _active_pcam_2d.EmitSignal(SignalName.TweenInterrupted, pcam);
+            }
+            else
+            {
+
+            }
+        }
+        else
+            noPreviousPcam = true;
+
+        if (_is_2D)
+        {
+
+        }
+        else
+        {
+
+        }
+
+        if (_is_2D)
+        {
+
+        }
+        else
+        {
+
+        }
+
+        if (noPreviousPcam)
+        {
+
+        }
+
+    }
+
+    private void _findPcamWithHighestPriority()
+    {
+        foreach (Node pcam in _pcam_list)
+        {
+            if (pcam is PhantomCamera2D pcam2D)
+            {
+                if (!pcam2D.Visible)
+                    continue;
+                // if(pcam2D.GetPriority() > _active_pcam_priority){
+                //     _assignNewActivePcam(pcam);
+                // }
+                // pcam2D.SetTweenSkip(this, false);
+                _active_pcam_missing = false;
+            }
+            else if (pcam is PhantomCamera3D pcam3D)
+            {
+                if (!pcam3D.Visible)
+                    continue;
+                // if(pcam3D.GetPriority() > _active_pcam_priority){
+                //     _assignNewActivePcam(pcam);
+                // }
+                // pcam3D.SetTweenSkip(this, false);
+                _active_pcam_missing = false;
+            }
+        }
+    }
+
     #endregion
 
     #region Override Methods
@@ -246,29 +322,94 @@ public partial class PhantomCameraHost : Node
                 camera3D.Attributes = null;
         }
 
-        _phantom_camera_manager.PcamAdded(this);
+        _phantom_camera_manager.PcamHostAdded(this);
 
         _checkCameraHostAmount();
+
+        if (_multiple_pcam_host)
+        {
+            GD.PrintErr(
+                "Only one PhantomCameraHost can exist in a scene \n Multiple PhantomCameraHosts will be supported in https://github.com/ramokz/phantom-camera/issues/26");
+            QueueFree();
+        }
+
+        if (_is_2D)
+        {
+            PhantomCamera2D[] PhantomCamera2Ds = _phantom_camera_manager.PhantomCamera2Ds;
+            if (PhantomCamera2Ds.Length > 0)
+                foreach (PhantomCamera2D pcam2D in PhantomCamera2Ds)
+                {
+                    PcamAddedToScene(pcam2D);
+                    //pcam2D.SetPcamHostOwner(this);
+                }
+        }
+        else
+        {
+            PhantomCamera3D[] PhantomCamera3Ds = _phantom_camera_manager.PhantomCamera3Ds;
+            if (PhantomCamera3Ds.Length > 0)
+                foreach (PhantomCamera3D pcam3D in PhantomCamera3Ds)
+                {
+                    PcamAddedToScene(pcam3D);
+                    //pcam3D.SetPcamHostOwner(this);
+                }
+        }
 
     }
 
     public override void _ExitTree()
     {
-
+        _phantom_camera_manager.PcamHostRemoved(this);
+        _checkCameraHostAmount();
     }
 
     public override void _Ready()
     {
+        if (!(IsInstanceValid(_active_pcam_2d) || IsInstanceValid(_active_pcam_3d)))
+            return;
 
+        if (_is_2D)
+            _active_pcam_2d_glob_transform = _active_pcam_2d.GlobalTransform;
+        else
+            _active_pcam_3d_glob_transform = _active_pcam_3d.GlobalTransform;
     }
 
     public override void _Process(double delta)
     {
-
+        if (_follow_target_physics_based || _active_pcam_missing)
+            return;
+        //_tweenFollowChecker(delta);
     }
 
     public override void _PhysicsProcess(double delta)
     {
+        if (!_follow_target_physics_based || _active_pcam_missing)
+            return;
+        //_tweenFollowChecker(delta);
+    }
+
+    #endregion
+
+    #region Public Methods
+
+    public void PcamAddedToScene(Node pcam)
+    {
+        if (pcam is not PhantomCamera2D or PhantomCamera3D)
+        {
+            GD.PrintErr("This function should only be called from PhantomCamera scripts");
+            return;
+        }
+
+        if (!_pcam_list.Contains(pcam))
+        {
+            _pcam_list.Add(pcam);
+            // if (pcam is PhantomCamera2D pcam2D && !pcam2D.TweeOnLoad)
+            //     pcam2D.setTweenSkip(this, true);
+
+            // else if (pcam is PhantomCamera3D pcam3D && !pcam3D.TweeOnLoad)
+            //     pcam3D.setTweenSkip(this, true);
+
+            _findPcamWithHighestPriority();
+        }
 
     }
 
