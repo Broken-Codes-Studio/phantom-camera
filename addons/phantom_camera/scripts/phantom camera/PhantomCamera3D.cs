@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Godot;
 using Godot.Collections;
 using PhantomCamera.Resources;
@@ -980,7 +981,7 @@ public partial class PhantomCamera3D : Node3D
             PcamHostOwner = _phantomCameraManager.PhantomCameraHosts[0];
 
 
-         VisibilityChanged += _checkVisibility;
+        VisibilityChanged += _checkVisibility;
 
     }
 
@@ -991,7 +992,7 @@ public partial class PhantomCamera3D : Node3D
         // if(_hasValidPcamOwner())
         //     PcamHostOwner.PcamRemovedFromScene(this);
 
-         VisibilityChanged -= _checkVisibility;
+        VisibilityChanged -= _checkVisibility;
 
     }
 
@@ -1042,17 +1043,144 @@ public partial class PhantomCamera3D : Node3D
 
     private void _processLogic(double delta)
     {
+        if (!IsActive)
+            switch (inactiveUpdateMode)
+            {
+                case InactiveUpdateMode.NEVER:
+                    return;
+                    // InactiveUpdateMode.EXPONENTIALLY:
+                    // TODO : Trigger positional updates less frequently as more PCams gets added
+            }
+
+        if (_shouldFollow)
+        {
+            _followLogic(delta);
+        }
+
+        if (_shouldLookAt)
+        {
+            _lookatLogic();
+        }
+    }
+
+    private void _followLogic(double delta)
+    {
+        if (followMode != FollowMode.GROUP)
+            if (FollowTarget.IsQueuedForDeletion())
+            {
+                FollowTarget = null;
+                return;
+            }
+        _followProcess(delta);
+    }
+
+    private void _lookatLogic()
+    {
+        if (LookAtTarget.IsQueuedForDeletion())
+        {
+            LookAtTarget = null;
+            return;
+        }
+        _lookatProcess(); // TODO : Delta needs to be applied, pending Godot's 3D Physics Interpolation to be implemented
+    }
+
+    private void _followProcess(double delta)
+    {
+        Vector3 followPosition = Vector3.Zero;
+
+        Node3D followTargetNode = this;
+
+        switch (followMode)
+        {
+            case FollowMode.GLUED:
+                if (FollowTarget is not null)
+                    followPosition = FollowTarget.GlobalPosition;
+                break;
+            case FollowMode.SIMPLE:
+                // if (FollowTarget is not null)
+                //         followPosition = _getTargetPositionOffset();
+                break;
+            case FollowMode.GROUP:
+                break;
+            case FollowMode.PATH:
+                break;
+            case FollowMode.FRAMED:
+                break;
+            case FollowMode.THIRD_PERSON:
+                break;
+        }
 
     }
 
-    private void _follow(double delta)
+    private void _lookatProcess()
+    {
+        switch (lookAtMode)
+        {
+            case LookAtMode.MIMIC:
+                if (LookAtTarget is not null)
+                    GlobalRotation = LookAtTarget.GlobalRotation;
+                break;
+            case LookAtMode.SIMPLE:
+                break;
+            case LookAtMode.GROUP:
+                break;
+        }
+    }
+
+    private Vector3 _getTargetPositionOffset()
+    {
+        return FollowTarget.GlobalPosition + FollowOffset;
+    }
+
+    private Vector3 _getPositionOffsetDistance()
+    {
+        return _getTargetPositionOffset() + Transform.Basis.Z + new Vector3(FollowDistance, FollowDistance, FollowDistance);
+    }
+
+    private void _setFollowVelocity(int index, float value)
     {
 
     }
 
-    private void _lookat()
+    private void _interpolatePosition(Vector3 targetPosition, double delta, Node3D cameraTarget = null)
+    {
+        if (cameraTarget is null)
+            cameraTarget = this;
+        if (FollowDamping)
+        {
+
+        }
+        else
+            cameraTarget.GlobalPosition = targetPosition;
+    }
+
+    private void _interpolateRotation(Vector3 targetTrans)
     {
 
+    }
+
+    private float _smoothDamp(float targetAxis, float selfAxis, int index, float currentVelocity, Callable setVelocity, float dampingTime, bool rot = false){
+        return 0;
+    }
+
+    private Vector2 _getRawUnprojectedPosition()
+    {
+        return GetViewport().GetCamera3D().UnprojectPosition(FollowTarget.GlobalPosition + FollowOffset);
+    }
+
+    private void _onDeadZoneChanged()
+    {
+        GlobalPosition = _getPositionOffsetDistance();
+    }
+
+    private Vector2 _getFramedSideOffset()
+    {
+        return Vector2.Zero;
+    }
+
+    private int _setLayer(int currentLayers, int layerNumber, bool value)
+    {
+        return 0;
     }
 
     private bool _hasValidPcamOwner()
@@ -1061,8 +1189,8 @@ public partial class PhantomCamera3D : Node3D
             return false;
         if (!IsInstanceValid(PcamHostOwner))
             return false;
-        // if(!IsInstanceValid(PcamHostOwner.Camera_3D))
-        //     return false;
+        if (!IsInstanceValid(PcamHostOwner.camera3D))
+            return false;
         return true;
     }
 
