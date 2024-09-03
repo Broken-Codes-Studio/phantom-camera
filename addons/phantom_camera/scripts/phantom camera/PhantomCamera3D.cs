@@ -187,7 +187,7 @@ public partial class PhantomCamera3D : Node3D
         get => _priorityOverride;
         set
         {
-            if (HasValidPcamOwner() && Engine.IsEditorHint())
+            if (_hasValidPcamOwner() && Engine.IsEditorHint())
             {
                 _priorityOverride = value;
                 if (value == true)
@@ -838,7 +838,7 @@ public partial class PhantomCamera3D : Node3D
 
     private Vector3 _currentRotation = Vector3.Zero;
 
-    private Node _phantomCameraManager = null;
+    private PhantomCameraManager _phantomCameraManager = null;
     #endregion
     #endregion
 
@@ -968,51 +968,94 @@ public partial class PhantomCamera3D : Node3D
     #endregion
 #endif
 
-    #region Methods
+    #region Override Methods
 
     public override void _EnterTree()
     {
-        _phantomCameraManager = GetTree().Root.GetNode(PhantomCameraConstants.PCAM_MANAGER_NODE_NAME);
-        //_phantomCameraManager.PcamAdded(this);
-        
+        _phantomCameraManager = GetTree().Root.GetNode<PhantomCameraManager>(PhantomCameraConstants.PCAM_MANAGER_NODE_NAME);
+
+        _phantomCameraManager.PcamAdded(this);
+
+        if (_phantomCameraManager.PhantomCameraHosts.Length > 0)
+            PcamHostOwner = _phantomCameraManager.PhantomCameraHosts[0];
+
+
+         VisibilityChanged += _checkVisibility;
+
     }
 
     public override void _ExitTree()
     {
+        _phantomCameraManager.PcamRemoved(this);
+
+        // if(_hasValidPcamOwner())
+        //     PcamHostOwner.PcamRemovedFromScene(this);
+
+         VisibilityChanged -= _checkVisibility;
 
     }
 
     public override void _Ready()
     {
 
+        if (Engine.IsEditorHint())
+            return;
+
+        if (followMode == FollowMode.THIRD_PERSON)
+        {
+            if (!IsInstanceValid(_followSpringArm))
+            {
+                _followSpringArm = new();
+                _followSpringArm.TopLevel = true;
+                _followSpringArm.Rotation = GlobalRotation;
+                //_followSpringArm.Position = IsInstanceValid(FollowTarget) ? _getTargetPositionOffset() : GlobalPosition;
+                _followSpringArm.SpringLength = SpringLength;
+                _followSpringArm.CollisionMask = CollisionMask;
+                _followSpringArm.Shape = Shape;
+                _followSpringArm.Margin = Margin;
+                //GetParent().AddChild(_followSpringArm);
+                //Reparent(_followSpringArm);
+            }
+        }
+        else if (followMode == FollowMode.FRAMED)
+        {
+            //_followFramedOffset = GlobalPosition - _getTargetPositionOffset();
+            _currentRotation = GlobalRotation;
+        }
     }
 
     public override void _Process(double delta)
     {
-
+        if (!_followTargetPhysicsBased)
+            _processLogic(delta);
     }
 
     public override void _PhysicsProcess(double delta)
     {
-
+        if (_followTargetPhysicsBased)
+            _processLogic(delta);
     }
 
-    private void ProcessLogic(double delta)
+    #endregion
+
+    #region Private Methods
+
+    private void _processLogic(double delta)
     {
 
     }
 
-    private void Follow(double delta)
+    private void _follow(double delta)
     {
 
     }
 
-    private void Lookat()
+    private void _lookat()
     {
 
     }
 
-    private bool HasValidPcamOwner()
+    private bool _hasValidPcamOwner()
     {
         if (PcamHostOwner == null)
             return false;
@@ -1023,6 +1066,12 @@ public partial class PhantomCamera3D : Node3D
         return true;
     }
 
+    private void _checkVisibility()
+    {
+        if (!IsInstanceValid(PcamHostOwner))
+            return;
+        PcamHostOwner.RefreshPcamListPriority();
+    }
 
     #endregion
 

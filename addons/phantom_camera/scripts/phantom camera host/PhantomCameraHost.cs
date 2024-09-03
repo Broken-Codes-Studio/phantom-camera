@@ -391,6 +391,11 @@ public partial class PhantomCameraHost : Node
 
     #region Public Methods
 
+    public void ShowViewFinderInPlay()
+    {
+
+    }
+
     public void PcamAddedToScene(Node pcam)
     {
         if (pcam is not PhantomCamera2D or PhantomCamera3D)
@@ -411,6 +416,43 @@ public partial class PhantomCameraHost : Node
             _findPcamWithHighestPriority();
         }
 
+    }
+
+    public void PcamRemovedFromScene(Node pcam)
+    {
+
+    }
+
+    public void PcamPriorityUpdated(Node pcam)
+    {
+
+    }
+
+    public void PcamPriorityOverride(Node pcam)
+    {
+
+    }
+
+    public void PcamPriorityOverrideDisabled()
+    {
+
+    }
+
+    public Node GetActivePcame()
+    {
+        if (_is_2D)
+            return _active_pcam_2d;
+        else
+            return _active_pcam_3d;
+    }
+
+    public bool GetTriggerPcamTween(){
+        return _trigger_pcam_tween;
+    }
+
+    public void RefreshPcamListPriority(){
+        _active_pcam_priority = -1;
+        _findPcamWithHighestPriority();
     }
 
     #endregion
