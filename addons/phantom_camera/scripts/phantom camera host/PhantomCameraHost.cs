@@ -202,7 +202,7 @@ public partial class PhantomCameraHost : Node
             {
                 _prev_active_pcam_2D_transform = camera2D.GlobalTransform;
                 _active_pcam_2d.QueueRedraw();
-                // _active_pcam_2d.SetIsActive(this, false);
+                // _active_pcam_2d.IsActive = false;
                 //_active_pcam_2d.EmitSignal(SignalName.BecomeInactive);
 
                 // if (_trigger_pcam_tween)
@@ -350,7 +350,7 @@ public partial class PhantomCameraHost : Node
                 foreach (PhantomCamera3D pcam3D in PhantomCamera3Ds)
                 {
                     PcamAddedToScene(pcam3D);
-                    //pcam3D.SetPcamHostOwner(this);
+                    pcam3D.PcamHostOwner = this;
                 }
         }
 

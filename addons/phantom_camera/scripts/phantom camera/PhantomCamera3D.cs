@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using Godot;
 using Godot.Collections;
@@ -167,8 +168,8 @@ public partial class PhantomCamera3D : Node3D
         set
         {
             _pcamHostOwner = value;
-            // if(IsInstanceValid(PcamHostOwner))
-            //     PcamHostOwner.PcamAddedToScene(this);
+            if (IsInstanceValid(PcamHostOwner))
+                PcamHostOwner.PcamAddedToScene(this);
         }
     }
 
@@ -193,12 +194,12 @@ public partial class PhantomCamera3D : Node3D
                 _priorityOverride = value;
                 if (value == true)
                 {
-                    // PcamHostOwner.PcamPriorityOverride(this);
+                    PcamHostOwner.PcamPriorityOverride(this);
                 }
                 else
                 {
-                    // PcamHostOwner.PcamPriorityUpdated(this);
-                    // PcamHostOwner.PcamPriorityOverrideDisabled();
+                    PcamHostOwner.PcamPriorityUpdated(this);
+                    PcamHostOwner.PcamPriorityOverrideDisabled();
                 }
             }
         }
@@ -223,8 +224,8 @@ public partial class PhantomCamera3D : Node3D
         set
         {
             _priority = value < 0 ? 0 : value;
-            // if (HasValidPcamOwner())
-            //     PcamHostOwner.PcamPriorityUpdated(this);
+            if (_hasValidPcamOwner())
+                PcamHostOwner.PcamPriorityUpdated(this);
         }
     }
 
@@ -245,16 +246,23 @@ public partial class PhantomCamera3D : Node3D
 
             if (value == FollowMode.FRAMED)
             {
-
+                if (_followFramedInitialSet && FollowTarget is not null)
+                {
+                    _followFramedInitialSet = false;
+                    DeadZoneChanged += _onDeadZoneChanged;
+                }
             }
             else
             {
-
+                if (IsConnected(SignalName.DeadZoneChanged, Callable.From(_onDeadZoneChanged)))
+                    DeadZoneChanged -= _onDeadZoneChanged;
             }
 
-            // if(value == FollowMode.NONE)
+            if (value == FollowMode.NONE)
+                _shouldFollow = false;
 
-            // else if (value == FollowMode.GROUP && ())
+            else if (value == FollowMode.GROUP && (FollowTargets is not null || FollowTarget is not null))
+                _shouldFollow = true;
 
             NotifyPropertyListChanged();
         }
@@ -458,8 +466,8 @@ public partial class PhantomCamera3D : Node3D
         set
         {
             camera3DResource.CullMask = value;
-            // if(IsActive)
-            //     PcamHostOwner.camera3D.cull_mask = value;
+            if (IsActive)
+                PcamHostOwner.camera3D.CullMask = value;
         }
     }
 
@@ -469,8 +477,8 @@ public partial class PhantomCamera3D : Node3D
         set
         {
             camera3DResource.H_Offset = value;
-            // if(IsActive)
-            //     PcamHostOwner.camera3D.h_offset = value;
+            if (IsActive)
+                PcamHostOwner.camera3D.HOffset = value;
         }
     }
 
@@ -480,8 +488,8 @@ public partial class PhantomCamera3D : Node3D
         set
         {
             camera3DResource.V_Offset = value;
-            // if(IsActive)
-            //     PcamHostOwner.camera3D.V_Offset = value;
+            if (IsActive)
+                PcamHostOwner.camera3D.VOffset = value;
         }
     }
 
@@ -491,8 +499,8 @@ public partial class PhantomCamera3D : Node3D
         set
         {
             camera3DResource.Projection = value;
-            // if(IsActive)
-            //     PcamHostOwner.camera3D.Projection = value;
+            //if(IsActive)
+            //PcamHostOwner.camera3D.Projection = value;
         }
     }
 
@@ -502,8 +510,8 @@ public partial class PhantomCamera3D : Node3D
         set
         {
             camera3DResource.FOV = value;
-            // if(IsActive)
-            //     PcamHostOwner.camera3D.FOV = value;
+            if (IsActive)
+                PcamHostOwner.camera3D.Fov = value;
         }
     }
 
@@ -513,8 +521,8 @@ public partial class PhantomCamera3D : Node3D
         set
         {
             camera3DResource.Size = value;
-            // if(IsActive)
-            //     PcamHostOwner.camera3D.Size = value;
+            if (IsActive)
+                PcamHostOwner.camera3D.Size = value;
         }
     }
 
@@ -524,8 +532,8 @@ public partial class PhantomCamera3D : Node3D
         set
         {
             camera3DResource.FrustumOffset = value;
-            // if(IsActive)
-            //     PcamHostOwner.camera3D.FrustumOffset = value;
+            if (IsActive)
+                PcamHostOwner.camera3D.FrustumOffset = value;
         }
     }
 
@@ -535,8 +543,8 @@ public partial class PhantomCamera3D : Node3D
         set
         {
             camera3DResource.Far = value;
-            // if(IsActive)
-            //     PcamHostOwner.camera3D.Far = value;
+            if (IsActive)
+                PcamHostOwner.camera3D.Far = value;
         }
     }
 
@@ -546,8 +554,8 @@ public partial class PhantomCamera3D : Node3D
         set
         {
             camera3DResource.Near = value;
-            // if(IsActive)
-            //     PcamHostOwner.camera3D.Near = value;
+            if (IsActive)
+                PcamHostOwner.camera3D.Near = value;
         }
     }
 
@@ -557,7 +565,7 @@ public partial class PhantomCamera3D : Node3D
     /// Overrides the [member Camera3D.environment] resource property.
     /// </summary>
     [Export]
-    public Environment Environment { get; set; } = null;
+    public Godot.Environment Environment { get; set; } = null;
 
     /// <summary>
     /// Overrides the [member Camera3D.attribuets] resource property.
@@ -989,8 +997,8 @@ public partial class PhantomCamera3D : Node3D
     {
         _phantomCameraManager.PcamRemoved(this);
 
-        // if(_hasValidPcamOwner())
-        //     PcamHostOwner.PcamRemovedFromScene(this);
+        if (_hasValidPcamOwner())
+            PcamHostOwner.PcamRemovedFromScene(this);
 
         VisibilityChanged -= _checkVisibility;
 
@@ -1009,7 +1017,7 @@ public partial class PhantomCamera3D : Node3D
                 _followSpringArm = new();
                 _followSpringArm.TopLevel = true;
                 _followSpringArm.Rotation = GlobalRotation;
-                //_followSpringArm.Position = IsInstanceValid(FollowTarget) ? _getTargetPositionOffset() : GlobalPosition;
+                _followSpringArm.Position = IsInstanceValid(FollowTarget) ? _getTargetPositionOffset() : GlobalPosition;
                 _followSpringArm.SpringLength = SpringLength;
                 _followSpringArm.CollisionMask = CollisionMask;
                 _followSpringArm.Shape = Shape;
@@ -1020,7 +1028,7 @@ public partial class PhantomCamera3D : Node3D
         }
         else if (followMode == FollowMode.FRAMED)
         {
-            //_followFramedOffset = GlobalPosition - _getTargetPositionOffset();
+            _followFramedOffset = GlobalPosition - _getTargetPositionOffset();
             _currentRotation = GlobalRotation;
         }
     }
@@ -1097,18 +1105,138 @@ public partial class PhantomCamera3D : Node3D
                     followPosition = FollowTarget.GlobalPosition;
                 break;
             case FollowMode.SIMPLE:
-                // if (FollowTarget is not null)
-                //         followPosition = _getTargetPositionOffset();
+                if (FollowTarget is not null)
+                    followPosition = _getTargetPositionOffset();
                 break;
             case FollowMode.GROUP:
+                if (FollowTargets is not null)
+                {
+                    if (FollowTargets.Length == 1)
+                        followPosition = FollowTargets[0].GlobalPosition + FollowOffset + Transform.Basis.Z * new Vector3(FollowDistance, FollowDistance, FollowDistance);
+                    else if (FollowTargets.Length > 1)
+                    {
+                        Aabb bounds = new(FollowTargets[0].GlobalPosition, Vector3.Zero);
+
+                        foreach (Node3D node in FollowTargets)
+                        {
+                            if (IsInstanceValid(node))
+                                bounds = bounds.Expand(node.GlobalPosition);
+                        }
+
+                        float distance = FollowDistance;
+
+                        if (AutoFollowDistance)
+                        {
+                            distance = Mathf.Lerp(AutoFollowDistanceMin, AutoFollowDistanceMax, bounds.GetLongestAxisSize() / AutoFollowDistanceDivisor);
+                            distance = Mathf.Clamp(distance, AutoFollowDistanceMin, AutoFollowDistanceMax);
+                        }
+
+                        followPosition = bounds.GetCenter() + FollowOffset + Transform.Basis.Z * new Vector3(distance, distance, distance);
+
+                    }
+                }
                 break;
             case FollowMode.PATH:
+                if (FollowTarget is not null && FollowPath is not null)
+                {
+                    Vector3 pathPosition = FollowPath.GlobalPosition;
+                    followPosition = FollowPath.Curve.GetClosestPoint(followTargetNode.GlobalPosition - pathPosition) + pathPosition;
+                }
                 break;
             case FollowMode.FRAMED:
+                if (FollowTarget is null)
+                    break;
+                if (!Engine.IsEditorHint())
+                {
+                    if (!IsActive || PcamHostOwner.GetTriggerPcamTween())
+                    {
+                        followPosition = _getPositionOffsetDistance();
+                        _interpolatePosition(followPosition, delta);
+                        return;
+                    }
+
+                    ViewportPosition = GetViewport().GetCamera3D().UnprojectPosition(_getPositionOffsetDistance());
+                    Vector2 visibleRectSize = GetViewport().GetViewport().GetVisibleRect().Size;
+
+                    ViewportPosition /= visibleRectSize;
+                    _currentRotation = GlobalRotation;
+
+                    if (_currentRotation != GlobalRotation)
+                        followPosition = _getPositionOffsetDistance();
+
+                    if (_getFramedSideOffset() != Vector2.Zero)
+                    {
+                        Vector3 targetPosition = _getTargetPositionOffset() + _followFramedOffset;
+                        Vector3 gloPos = _getPositionOffsetDistance();
+
+                        if (DeadZoneWidth == 0 || DeadZoneHeight == 0)
+                        {
+                            if (DeadZoneWidth == 0 && DeadZoneHeight != 0)
+                            {
+                                gloPos.Z = targetPosition.Z;
+                                followPosition = gloPos;
+                            }
+                            else if (DeadZoneWidth != 0 && DeadZoneHeight == 0)
+                            {
+                                gloPos.X = targetPosition.X;
+                                followPosition = gloPos;
+                            }
+                            else
+                                followPosition = _getPositionOffsetDistance();
+                        }
+                    }
+                    else
+                    {
+                        _followFramedOffset = GlobalPosition - _getTargetPositionOffset();
+                        _currentRotation = GlobalRotation;
+                        return;
+                    }
+
+                }
+                else
+                {
+                    followPosition = _getPositionOffsetDistance();
+                    Vector2 unprojectedPosition = _getRawUnprojectedPosition();
+                    float viewportWidth = GetViewport().GetVisibleRect().Size.X;
+                    float viewportHeight = GetViewport().GetVisibleRect().Size.Y;
+                    Camera3D.KeepAspectEnum cameraAspect = GetViewport().GetCamera3D().KeepAspect;
+                    Vector2 visibleRectSize = GetViewport().GetViewport().GetVisibleRect().Size;
+
+                    unprojectedPosition -= visibleRectSize / 2;
+                    if (cameraAspect is Camera3D.KeepAspectEnum.Height)
+                    {
+                        //Landscape View
+                        float aspectRatioScale = viewportWidth / viewportHeight;
+                        unprojectedPosition.X = (unprojectedPosition.X / aspectRatioScale + 1) / 2;
+                        unprojectedPosition.Y = (unprojectedPosition.Y + 1) / 2;
+                    }
+                    else
+                    {
+                        //Portrait View
+                        float aspectRatioScale = viewportHeight / viewportWidth;
+                        unprojectedPosition.X = (unprojectedPosition.X + 1) / 2;
+                        unprojectedPosition.Y = (unprojectedPosition.Y / aspectRatioScale + 1) / 2;
+                    }
+
+                    ViewportPosition = unprojectedPosition;
+                }
                 break;
             case FollowMode.THIRD_PERSON:
+                if (FollowTarget is not null)
+                    if (!Engine.IsEditorHint())
+                    {
+                        if (IsInstanceValid(FollowTarget) && IsInstanceValid(_followSpringArm))
+                        {
+                            followPosition = _getTargetPositionOffset();
+                            followTargetNode = _followSpringArm;
+                        }
+                    }
+                    else
+                        followPosition = _getPositionOffsetDistance();
                 break;
         }
+
+        _interpolatePosition(followPosition, delta, followTargetNode);
 
     }
 
@@ -1121,8 +1249,24 @@ public partial class PhantomCamera3D : Node3D
                     GlobalRotation = LookAtTarget.GlobalRotation;
                 break;
             case LookAtMode.SIMPLE:
+                _interpolateRotation(LookAtTargets[0].GlobalPosition);
                 break;
             case LookAtMode.GROUP:
+                if (!_hasMultipleFollowTargets)
+                {
+                    if (LookAtTargets.Length == 0)
+                        return;
+                    _interpolateRotation(LookAtTargets[0].GlobalPosition);
+                }
+                else
+                {
+                    Aabb bounds = new(LookAtTargets[0].GlobalPosition, Vector3.Zero);
+                    foreach (Node3D node in LookAtTargets)
+                    {
+                        bounds = bounds.Expand(node.GlobalPosition);
+                    }
+                    _interpolateRotation(bounds.GetCenter());
+                }
                 break;
         }
     }
@@ -1139,7 +1283,7 @@ public partial class PhantomCamera3D : Node3D
 
     private void _setFollowVelocity(int index, float value)
     {
-
+        _followVelocityRef[index] = value;
     }
 
     private void _interpolatePosition(Vector3 targetPosition, double delta, Node3D cameraTarget = null)
@@ -1148,7 +1292,19 @@ public partial class PhantomCamera3D : Node3D
             cameraTarget = this;
         if (FollowDamping)
         {
-
+            Vector3 position = cameraTarget.GlobalPosition;
+            for (int index = 0; index < 3; index++)
+            {
+                position[index] = _smoothDamp(
+                    targetPosition[index],
+                    cameraTarget.GlobalPosition[index],
+                    index,
+                    _followVelocityRef[index],
+                    new(this, MethodName._setFollowVelocity),
+                    FollowDampingValue[index]
+                );
+            }
+            cameraTarget.GlobalPosition = position;
         }
         else
             cameraTarget.GlobalPosition = targetPosition;
@@ -1156,11 +1312,72 @@ public partial class PhantomCamera3D : Node3D
 
     private void _interpolateRotation(Vector3 targetTrans)
     {
+        Vector3 direction = (targetTrans - GlobalPosition + LookAtOffset).Normalized();
+        Basis targetBasis = Basis.LookingAt(direction);
+        Quaternion targetQuat = targetBasis.GetRotationQuaternion().Normalized();
 
+        if (LookAtDamping)
+        {
+            Quaternion currentQuat = Quaternion.Normalized();
+
+            float dampingTime = Mathf.Max(.0001f, LookAtDampingValue);
+            float t = (float)Mathf.Min(1f, GetProcessDeltaTime() / dampingTime);
+
+            float dot = currentQuat.Dot(targetQuat);
+
+            if (dot < .0f)
+            {
+                targetQuat = -targetQuat;
+                dot = -dot;
+            }
+
+            dot = Mathf.Clamp(dot, -1f, 1f);
+
+            float theta = Mathf.Acos(dot) * t;
+
+            float sinTheta = Mathf.Sin(theta);
+            float sinThetaTotal = Mathf.Sin(Mathf.Acos(dot));
+
+            // Stop interpolating once sin_theta_total reaches a very low value or 0
+            if (sinThetaTotal < .00001f)
+                return;
+
+            float ratioA = Mathf.Cos(theta) - dot * sinTheta / sinThetaTotal;
+            float ratioB = sinTheta / sinThetaTotal;
+
+            Quaternion = currentQuat * ratioA + targetQuat * ratioB;
+
+        }
+        else
+            Quaternion = targetQuat;
     }
 
-    private float _smoothDamp(float targetAxis, float selfAxis, int index, float currentVelocity, Callable setVelocity, float dampingTime, bool rot = false){
-        return 0;
+    private float _smoothDamp(float targetAxis, float selfAxis, int index, float currentVelocity, Callable setVelocity, float dampingTime, bool rot = false)
+    {
+        dampingTime = Mathf.Max(.0001f, dampingTime);
+        float omega = 2 / dampingTime;
+        float delta = (float)GetProcessDeltaTime();
+        float x = omega * delta;
+        float exponential = 1 / (1 + x + .48f * x * x + .235f * x * x * x);
+        float diff = selfAxis - targetAxis;
+        float _target_Axis = targetAxis;
+
+        float maxChange = Mathf.Inf * dampingTime;
+        diff = Mathf.Clamp(diff, -maxChange, maxChange);
+        targetAxis = selfAxis - diff;
+
+        float temp = (currentVelocity + omega * diff) * delta;
+        setVelocity.Call(index, (currentVelocity - omega * temp) * exponential);
+        float output = targetAxis + (diff + temp) * exponential;
+
+        //To prevent overshooting
+        if ((_target_Axis - selfAxis > .0f) == (output > _target_Axis))
+        {
+            output = _target_Axis;
+            setVelocity.Call(index, (output - _target_Axis) / delta);
+        }
+
+        return output;
     }
 
     private Vector2 _getRawUnprojectedPosition()
@@ -1175,12 +1392,47 @@ public partial class PhantomCamera3D : Node3D
 
     private Vector2 _getFramedSideOffset()
     {
-        return Vector2.Zero;
+
+        Vector2 frameOutBounds = Vector2.Zero;
+
+        if (ViewportPosition.X < .5f - DeadZoneWidth / 2)
+            // Is Outside left edge
+            frameOutBounds.X = -1;
+
+        if (ViewportPosition.Y < .5f - DeadZoneHeight / 2)
+            // Is Outside top edge
+            frameOutBounds.Y = -1;
+
+        if (ViewportPosition.X > .5f + DeadZoneWidth / 2)
+            // Is Outside right edge
+            frameOutBounds.X = 1;
+
+        if (ViewportPosition.Y < .5001f + DeadZoneHeight / 2) // 0.501 to resolve an issue where the bottom vertical Dead Zone never becoming 0 when the Dead Zone Vertical parameter is set to 0
+            // Is Outside bottom edge
+            frameOutBounds.Y = 1;
+
+        return frameOutBounds;
+
     }
 
     private int _setLayer(int currentLayers, int layerNumber, bool value)
     {
-        return 0;
+
+        int mask = currentLayers;
+
+        // From https://github.com/godotengine/godot/blob/51991e20143a39e9ef0107163eaf283ca0a761ea/scene/3d/camera_3d.cpp#L638
+
+        if (layerNumber < 1 || layerNumber > 20)
+            GD.PrintErr("Render layer must be between 1 and 20.");
+        else
+        {
+            if (value)
+                mask |= 1 << (layerNumber - 1);
+            else
+                mask &= ~(1 << (layerNumber - 1));
+        }
+
+        return mask;
     }
 
     private bool _hasValidPcamOwner()
