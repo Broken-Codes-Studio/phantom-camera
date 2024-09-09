@@ -6,7 +6,7 @@ namespace PhantomCamera.Gizmo;
 public partial class PhantomCameraGizmoPlugin3D : CustomPluginGizmo
 {
 	
-	const string SPATIAL_SCRIPT_PATH = "res://addons/phantom_camera/scripts/phantom_camera/phantom_camera_3d.cs";
+	const string SPATIAL_SCRIPT_PATH = "res://addons/phantom_camera/scripts/phantom camera/PhantomCamera3D.cs";
 	const string ICON_PATH = "res://addons/phantom_camera/icons/phantom_camera_gizmo.svg";
 
 	public PhantomCameraGizmoPlugin3D() {
