@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3 uid="uid://dabcjq5dplxu6"]
+
+[ext_resource type="Script" path="res://addons/phantom_camera/panel/Editor.cs" id="1_2i5x2"]
+[ext_resource type="PackedScene" uid="uid://dbkr3d716wtx0" path="res://addons/phantom_camera/panel/viewfinder/viewfinder_panel.tscn" id="2_xecnk"]
+
+[node name="EditorPanel" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_2i5x2")
+
+[node name="ViewfinderPanel" parent="." instance=ExtResource("2_xecnk")]
+unique_name_in_owner = true
+layout_mode = 2
+script = null
