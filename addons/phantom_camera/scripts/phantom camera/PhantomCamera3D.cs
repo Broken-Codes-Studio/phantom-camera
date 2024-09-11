@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Godot;
 using Godot.Collections;
@@ -120,6 +121,12 @@ public partial class PhantomCamera3D : Node3D
     /// </summary>
     [Signal]
     public delegate void FollowTargetChangedEventHandler();
+
+    /// <summary>
+    /// Emitted when [member look_at_target] changes.
+    /// </summary>
+    [Signal]
+    public delegate void LookAtTargetChangedEventHandler();
 
     /// <summary>
     /// Emitted when dead zones changes.
@@ -280,8 +287,6 @@ public partial class PhantomCamera3D : Node3D
         get => _followTarget;
         set
         {
-
-
             if (_followTarget is not null && _followTarget.Equals(value))
                 return;
             _followTarget = value;
@@ -290,7 +295,7 @@ public partial class PhantomCamera3D : Node3D
             if (IsInstanceValid(value))
             {
                 _shouldFollow = true;
-                //CheckPhysicsBody(value);
+                _checkPhysicsBody(value);
             }
             else
                 _shouldFollow = false;
@@ -330,7 +335,9 @@ public partial class PhantomCamera3D : Node3D
                 {
                     _shouldFollow = true;
                     ++validInstances;
-                    //CheckPhysicsBody(target)
+
+                    _checkPhysicsBody(target);
+
                     if (validInstances > 1)
                         _hasMultipleFollowTargets = true;
                 }
@@ -379,13 +386,29 @@ public partial class PhantomCamera3D : Node3D
         }
     }
 
+    public Node3D _lookAtTarget = null;
     /// <summary>
     /// Determines which target should be looked at.
     /// The [param PhantomCamera3D] will update its rotational value as the
     /// target changes its position.
     /// </summary>
     [Export]
-    public Node3D LookAtTarget { get; set; } = null;
+    public Node3D LookAtTarget
+    {
+        get => _lookAtTarget;
+        set
+        {
+            _lookAtTarget = value;
+            _checkPhysicsBody(value);
+            EmitSignal(SignalName.LookAtTargetChanged);
+            if (IsInstanceValid(_lookAtTarget))
+                _shouldLookAt = true;
+            else
+                _shouldLookAt = false;
+
+            NotifyPropertyListChanged();
+        }
+    }
 
     private Node3D[] _lookAtTargets = { };
     /// <summary>
@@ -398,7 +421,38 @@ public partial class PhantomCamera3D : Node3D
         get => _lookAtTargets;
         set
         {
+            if (_lookAtTargets == value)
+                return;
             _lookAtTargets = value;
+
+            if (_lookAtTargets.Length == 0)
+            {
+                _shouldLookAt = false;
+                _hasMultipleLookAtTargets = false;
+            }
+            else
+            {
+                int validInstances = 0;
+                foreach (Node3D target in _lookAtTargets)
+                {
+                    if (IsInstanceValid(target))
+                    {
+                        ++validInstances;
+                        _shouldLookAt = true;
+                        _checkPhysicsBody(target);
+                    }
+
+                    if (validInstances > 1)
+                        _hasMultipleLookAtTargets = true;
+                    else if (validInstances == 0)
+                    {
+                        _shouldLookAt = false;
+                        _hasMultipleLookAtTargets = false;
+                    }
+                }
+            }
+
+            NotifyPropertyListChanged();
         }
     }
 
@@ -840,8 +894,7 @@ public partial class PhantomCamera3D : Node3D
 
     private bool _shouldLookAt = false;
     private bool _hasMultipleFollowTargets = false;
-
-    private Node3D[] _validLookAtTargets = { };
+    private bool _hasMultipleLookAtTargets = false;
 
     private Vector3 _followVelocityRef = Vector3.Zero;
 
@@ -1027,7 +1080,7 @@ public partial class PhantomCamera3D : Node3D
                 _followSpringArm.CollisionMask = CollisionMask;
                 _followSpringArm.Shape = Shape;
                 _followSpringArm.Margin = Margin;
-                GetParent().CallDeferred("AddChild",_followSpringArm);
+                GetParent().CallDeferred("AddChild", _followSpringArm);
                 CallDeferred("Reparent", _followSpringArm);
             }
         }
@@ -1053,7 +1106,6 @@ public partial class PhantomCamera3D : Node3D
     #endregion
 
     #region Public Methods
-
 
     #endregion
 
@@ -1259,7 +1311,7 @@ public partial class PhantomCamera3D : Node3D
                     GlobalRotation = LookAtTarget.GlobalRotation;
                 break;
             case LookAtMode.SIMPLE:
-                _interpolateRotation(LookAtTargets[0].GlobalPosition);
+                _interpolateRotation(LookAtTarget.GlobalPosition);
                 break;
             case LookAtMode.GROUP:
                 if (!_hasMultipleFollowTargets)
@@ -1461,6 +1513,14 @@ public partial class PhantomCamera3D : Node3D
         if (!IsInstanceValid(PcamHostOwner))
             return;
         PcamHostOwner.RefreshPcamListPriority();
+    }
+
+    private void _checkPhysicsBody(Node3D target)
+    {
+        if (target is not PhysicsBody3D)
+            return;
+
+        // TODO: Enable once Godot supports 3D Physics Interpolation
     }
 
     #endregion
