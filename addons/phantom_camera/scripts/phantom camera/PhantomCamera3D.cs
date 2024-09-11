@@ -173,7 +173,7 @@ public partial class PhantomCamera3D : Node3D
         }
     }
 
-    public bool IsActive { get; private set; } = false;
+    public bool IsActive { get; set; } = false;
 
     private bool _priorityOverride = false;
     /// <summary>
@@ -442,6 +442,13 @@ public partial class PhantomCamera3D : Node3D
     /// </summary>
     [Export]
     public bool TweenOnLoad { get; set; } = true;
+
+    private bool _tweenSkip = false;
+    public bool TweenSkip
+    {
+        get => _tweenSkip;
+        set => _tweenSkip = value;
+    }
 
     /// <summary>
     /// Determines how often an inactive [param PhantomCamera3D] should update
@@ -836,8 +843,6 @@ public partial class PhantomCamera3D : Node3D
 
     private Node3D[] _validLookAtTargets = { };
 
-    private bool _tweenSkip = false;
-
     private Vector3 _followVelocityRef = Vector3.Zero;
 
     private bool _followFramedInitialSet = false;
@@ -1044,6 +1049,11 @@ public partial class PhantomCamera3D : Node3D
         if (_followTargetPhysicsBased)
             _processLogic(delta);
     }
+
+    #endregion
+
+    #region Public Methods
+
 
     #endregion
 
