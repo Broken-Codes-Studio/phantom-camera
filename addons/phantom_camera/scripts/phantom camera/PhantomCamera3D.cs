@@ -1027,8 +1027,8 @@ public partial class PhantomCamera3D : Node3D
                 _followSpringArm.CollisionMask = CollisionMask;
                 _followSpringArm.Shape = Shape;
                 _followSpringArm.Margin = Margin;
-                //GetParent().AddChild(_followSpringArm);
-                //Reparent(_followSpringArm);
+                GetParent().CallDeferred("AddChild",_followSpringArm);
+                CallDeferred("Reparent", _followSpringArm);
             }
         }
         else if (followMode == FollowMode.FRAMED)

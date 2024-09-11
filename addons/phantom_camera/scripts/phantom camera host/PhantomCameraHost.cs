@@ -215,7 +215,7 @@ public partial class PhantomCameraHost : Node
 
         Node parent = GetParent();
 
-        if (parent is not Camera2D or Camera3D)
+        if (parent is not Camera2D && parent is not Camera3D)
             return;
 
         _is_child_of_camera = true;
@@ -315,7 +315,7 @@ public partial class PhantomCameraHost : Node
     /// <param name="pcam"></param>
     public void PcamAddedToScene(Node pcam)
     {
-        if (pcam is not PhantomCamera2D or PhantomCamera3D)
+        if (pcam is not PhantomCamera2D && pcam is not PhantomCamera3D)
         {
             GD.PrintErr("This function should only be called from PhantomCamera scripts");
             return;
