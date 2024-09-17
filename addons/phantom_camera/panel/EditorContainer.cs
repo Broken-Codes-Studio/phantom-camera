@@ -4,7 +4,8 @@ using System;
 
 namespace PhantomCamera.Inspector;
 
-public partial class Editor : VBoxContainer
+[Tool]
+public partial class EditorContainer : VBoxContainer
 {
 
 	public EditorPlugin editorPlugin;

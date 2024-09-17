@@ -1058,7 +1058,8 @@ public partial class PhantomCamera3D : Node3D
         if (_hasValidPcamOwner())
             PcamHostOwner.PcamRemovedFromScene(this);
 
-        VisibilityChanged -= _checkVisibility;
+        if (IsConnected(SignalName.VisibilityChanged, Callable.From(_checkVisibility)))
+            VisibilityChanged -= _checkVisibility;
 
     }
 
@@ -1257,30 +1258,34 @@ public partial class PhantomCamera3D : Node3D
                 }
                 else
                 {
-                    followPosition = _getPositionOffsetDistance();
-                    Vector2 unprojectedPosition = _getRawUnprojectedPosition();
-                    float viewportWidth = GetViewport().GetVisibleRect().Size.X;
-                    float viewportHeight = GetViewport().GetVisibleRect().Size.Y;
-                    Camera3D.KeepAspectEnum cameraAspect = GetViewport().GetCamera3D().KeepAspect;
-                    Vector2 visibleRectSize = GetViewport().GetViewport().GetVisibleRect().Size;
 
-                    unprojectedPosition -= visibleRectSize / 2;
-                    if (cameraAspect is Camera3D.KeepAspectEnum.Height)
+                    if (GetViewport().GetCamera3D() is not null)
                     {
-                        //Landscape View
-                        float aspectRatioScale = viewportWidth / viewportHeight;
-                        unprojectedPosition.X = (unprojectedPosition.X / aspectRatioScale + 1) / 2;
-                        unprojectedPosition.Y = (unprojectedPosition.Y + 1) / 2;
-                    }
-                    else
-                    {
-                        //Portrait View
-                        float aspectRatioScale = viewportHeight / viewportWidth;
-                        unprojectedPosition.X = (unprojectedPosition.X + 1) / 2;
-                        unprojectedPosition.Y = (unprojectedPosition.Y / aspectRatioScale + 1) / 2;
-                    }
+                        followPosition = _getPositionOffsetDistance();
+                        Vector2 unprojectedPosition = _getRawUnprojectedPosition();
+                        float viewportWidth = GetViewport().GetVisibleRect().Size.X;
+                        float viewportHeight = GetViewport().GetVisibleRect().Size.Y;
+                        Camera3D.KeepAspectEnum cameraAspect = GetViewport().GetCamera3D().KeepAspect;
+                        Vector2 visibleRectSize = GetViewport().GetViewport().GetVisibleRect().Size;
 
-                    ViewportPosition = unprojectedPosition;
+                        unprojectedPosition -= visibleRectSize / 2;
+                        if (cameraAspect is Camera3D.KeepAspectEnum.Height)
+                        {
+                            //Landscape View
+                            float aspectRatioScale = viewportWidth / viewportHeight;
+                            unprojectedPosition.X = (unprojectedPosition.X / aspectRatioScale + 1) / 2;
+                            unprojectedPosition.Y = (unprojectedPosition.Y + 1) / 2;
+                        }
+                        else
+                        {
+                            //Portrait View
+                            float aspectRatioScale = viewportHeight / viewportWidth;
+                            unprojectedPosition.X = (unprojectedPosition.X + 1) / 2;
+                            unprojectedPosition.Y = (unprojectedPosition.Y / aspectRatioScale + 1) / 2;
+                        }
+
+                        ViewportPosition = unprojectedPosition;
+                    }
                 }
                 break;
             case FollowMode.THIRD_PERSON:

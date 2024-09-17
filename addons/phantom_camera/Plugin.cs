@@ -25,7 +25,7 @@ public partial class Plugin : EditorPlugin
 
 	private PhantomCameraGizmoPlugin3D _pcam3DGizmoPlugin = new();
 
-	private Editor _editorPanelInstance;
+	private EditorContainer _editorPanelInstance = ResourceLoader.Load<PackedScene>(EDITOR_PANEL_PATH).Instantiate<EditorContainer>();
 	private Button panelButton;
 
 	#endregion
@@ -47,7 +47,8 @@ public partial class Plugin : EditorPlugin
 
 		// TODO: Should be disabled unless in editor
 		// Viewfinder
-		_editorPanelInstance = GD.Load<PackedScene>(EDITOR_PANEL_PATH).Instantiate<Editor>();
+		// VBoxContainer test = ResourceLoader.Load<PackedScene>(EDITOR_PANEL_PATH).Instantiate<VBoxContainer>();
+		// _editorPanelInstance = (EditorContainer)test;
 		_editorPanelInstance.editorPlugin = this;
 		panelButton = AddControlToBottomPanel(_editorPanelInstance, "Phantom Camera");
 

@@ -72,8 +72,7 @@ public partial class ViewFinder : Control
 
     #endregion
 
-    #region Override Methods
-    public override void _Ready()
+    public ViewFinder()
     {
         _camera2DIcon = GD.Load<CompressedTexture2D>("res://addons/phantom_camera/icons/viewfinder/Camera2DIcon.svg");
         _camera3DIcon = GD.Load<CompressedTexture2D>("res://addons/phantom_camera/icons/viewfinder/Camera3DIcon.svg");
@@ -81,6 +80,11 @@ public partial class ViewFinder : Control
         _pcam2DIcon = GD.Load<CompressedTexture2D>("res://addons/phantom_camera/icons/phantom_camera_2d.svg");
         _pcam3DIcon = GD.Load<CompressedTexture2D>("res://addons/phantom_camera/icons/phantom_camera_3d.svg");
         _noOpenSceneIcon = GD.Load<CompressedTexture2D>("res://addons/phantom_camera/icons/viewfinder/SceneTypesIcon.svg");
+    }
+
+    #region Override Methods
+    public override void _Ready()
+    {
 
         DeadZoneCenterHbox = GetNode<VBoxContainer>("%DeadZoneCenterHBoxContainer");
         DeadZoneCenterCenterPanel = GetNode<Panel>("%DeadZoneCenterCenterPanel");
@@ -150,25 +154,29 @@ public partial class ViewFinder : Control
     {
         if (Engine.IsEditorHint())
         {
-            if (GetTree().IsConnected("NodeAdded", Callable.From<Node>(_nodeAddedOrRemoved)))
+            if (GetTree().IsConnected("node_added", Callable.From<Node>(_nodeAddedOrRemoved)))
             {
                 GetTree().NodeAdded -= _nodeAddedOrRemoved;
                 GetTree().NodeRemoved -= _nodeAddedOrRemoved;
             }
         }
 
-        if (AspectRatioContainer.IsConnected("Resized", Callable.From(_resized)))
-            AspectRatioContainer.Resized -= _resized;
+        if (AspectRatioContainer is not null)
+            if (AspectRatioContainer.IsConnected("resized", Callable.From(_resized)))
+                AspectRatioContainer.Resized -= _resized;
 
-        if (_addNodeButton.IsConnected("Pressed", Callable.From(VisibilityCheck)))
-            _addNodeButton.Pressed -= VisibilityCheck;
+        if (_addNodeButton is not null)
+            if (_addNodeButton.IsConnected("pressed", Callable.From(VisibilityCheck)))
+                _addNodeButton.Pressed -= VisibilityCheck;
 
-        if (IsInstanceValid(_activePcam))
-            if (_activePcam.IsConnected("DeadZoneChanged", Callable.From(_onDeadZoneChanged)))
-                _activePcam.Disconnect("DeadZoneChanged", Callable.From(_onDeadZoneChanged));
+        if (_activePcam is not null)
+            if (IsInstanceValid(_activePcam))
+                if (_activePcam.IsConnected("DeadZoneChanged", Callable.From(_onDeadZoneChanged)))
+                    _activePcam.Disconnect("DeadZoneChanged", Callable.From(_onDeadZoneChanged));
 
-        if (_priorityOverrideButton.IsConnected("Pressed", Callable.From(_selectOverridePcam)))
-            _priorityOverrideButton.Pressed -= _selectOverridePcam;
+        if (_priorityOverrideButton is not null)
+            if (_priorityOverrideButton.IsConnected("pressed", Callable.From(_selectOverridePcam)))
+                _priorityOverrideButton.Pressed -= _selectOverridePcam;
     }
 
     public override void _Process(double delta)
@@ -268,7 +276,7 @@ public partial class ViewFinder : Control
             _addNodeButton.Visible = false;
         }
 
-        if (!_priorityOverrideButton.IsConnected("Pressed", Callable.From(_selectOverridePcam)))
+        if (!_priorityOverrideButton.IsConnected("pressed", Callable.From(_selectOverridePcam)))
             _priorityOverrideButton.Pressed += _selectOverridePcam;
     }
 
@@ -325,8 +333,8 @@ public partial class ViewFinder : Control
                 if (!PcamHost.IsConnected("UpdateEditorViewFinder", Callable.From<PhantomCameraHost>(_onUpdateEditorViewfinder)))
                     PcamHost.Connect("UpdateEditorViewFinder", Callable.From(() => _onUpdateEditorViewfinder(pcamHost)));
 
-                if (!AspectRatioContainer.IsConnected("Resized", Callable.From(_resized)))
-                    AspectRatioContainer.Connect("Resized", Callable.From(_resized));
+                if (!AspectRatioContainer.IsConnected("resized", Callable.From(_resized)))
+                    AspectRatioContainer.Connect("resized", Callable.From(_resized));
 
                 if (!_activePcam.IsConnected("DeadZoneChanged", Callable.From(_onDeadZoneChanged)))
                     _activePcam.Connect("DeadZoneChanged", Callable.From(_onDeadZoneChanged));
@@ -374,8 +382,8 @@ public partial class ViewFinder : Control
         else
             _emptyStateText.Text = "[center]No [b]" + text + "[/b] in scene[/center]";
 
-        if (_addNodeButton.IsConnected("Pressed", Callable.From(() => _addNode(text))))
-            _addNodeButton.Disconnect("Pressed", Callable.From(() => _addNode(text)));
+        if (_addNodeButton.IsConnected("pressed", Callable.From(() => _addNode(text))))
+            _addNodeButton.Disconnect("pressed", Callable.From(() => _addNode(text)));
 
         _addNodeButton.Pressed += () => _addNode(text);
     }
@@ -419,7 +427,7 @@ public partial class ViewFinder : Control
                 return;
 
             if (CameraViewportPanel.Size.X == 0)
-                await ToSignal(CameraViewportPanel, "Resized");
+                await ToSignal(CameraViewportPanel, "resized");
 
             if (IsInstanceValid(pcam3D.PcamHostOwner))
             {
