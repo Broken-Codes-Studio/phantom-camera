@@ -1,9 +1,11 @@
 #if TOOLS
 using Godot;
-using PhantomCamera.Gizmo;
 using System;
 
 namespace PhantomCamera;
+
+using Gizmo;
+using Inspector;
 
 [Tool]
 public partial class Plugin : EditorPlugin
@@ -14,6 +16,8 @@ public partial class Plugin : EditorPlugin
 	private const string PCAM_2D = "PhantomCamera2D";
 	private const string PCAM_3D = "PhantomCamera3D";
 
+	private const string EDITOR_PANEL_PATH = "res://addons/phantom_camera/panel/editor.tscn";
+
 	private readonly StringName PHANTOM_CAMERA_MANAGER = "PhantomCameraManager";
 	#endregion
 
@@ -21,7 +25,7 @@ public partial class Plugin : EditorPlugin
 
 	private PhantomCameraGizmoPlugin3D _pcam3DGizmoPlugin = new();
 
-	private Control _editorPanelInstance;
+	private Editor _editorPanelInstance;
 	private Button panelButton;
 
 	#endregion
@@ -43,11 +47,30 @@ public partial class Plugin : EditorPlugin
 
 		// TODO: Should be disabled unless in editor
 		// Viewfinder
+		_editorPanelInstance = GD.Load<PackedScene>(EDITOR_PANEL_PATH).Instantiate<Editor>();
+		_editorPanelInstance.editorPlugin = this;
+		panelButton = AddControlToBottomPanel(_editorPanelInstance, "Phantom Camera");
+
+		// Trigger events in the viewfinder whenever
+		panelButton.Toggled += _BtnToggled;
+
+		SceneChanged += _editorPanelInstance.viewFinder.SceneChanged;
+
+		SceneChanged += _sceneChanged;
 
 	}
 
 	public override void _ExitTree()
 	{
+
+		panelButton.Toggled -= _BtnToggled;
+
+		SceneChanged -= _editorPanelInstance.viewFinder.SceneChanged;
+
+		SceneChanged -= _sceneChanged;
+
+		RemoveControlFromBottomPanel(_editorPanelInstance);
+		_editorPanelInstance.QueueFree();
 
 		RemoveNode3DGizmoPlugin(_pcam3DGizmoPlugin);
 
@@ -64,17 +87,24 @@ public partial class Plugin : EditorPlugin
 
 	private void _BtnToggled(bool toggledOn)
 	{
-
+		if (toggledOn)
+		{
+			_editorPanelInstance.viewFinder.ViewFinderVisible = true;
+			_editorPanelInstance.viewFinder.VisibilityCheck();
+		}
+		else
+			_editorPanelInstance.viewFinder.ViewFinderVisible = false;
 	}
 
 	private void _makeVisible(bool visible)
 	{
-
+		if (_editorPanelInstance is not null)
+			_editorPanelInstance.Visible = visible;
 	}
 
 	private void _sceneChanged(Node sceneRoot)
 	{
-
+		_editorPanelInstance.viewFinder.SceneChanged(sceneRoot);
 	}
 
 	#endregion

@@ -2,17 +2,19 @@
 using Godot;
 using System;
 
+namespace PhantomCamera.Inspector;
+
 public partial class Editor : VBoxContainer
 {
 
-	//private EditorPlugin _editorPlugin;
+	public EditorPlugin editorPlugin;
 
-	private Control _viewFinder;
+	public ViewFinder viewFinder;
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
-		_viewFinder = GetNode<Control>("%ViewfinderPanel");
+		viewFinder = GetNode<ViewFinder>("%ViewfinderPanel");
 	}
 
 }
