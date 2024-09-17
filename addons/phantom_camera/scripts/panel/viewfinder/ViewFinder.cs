@@ -293,7 +293,45 @@ public partial class ViewFinder : Control
 
     private void _setViewfinder(Node root, bool editor)
     {
+        PcamHostGroup = GetTree().Root.GetNode<PhantomCameraManager>(PhantomCameraConstants.PCAM_MANAGER_NODE_NAME).PhantomCameraHosts;
+        if (PcamHostGroup.Length != 0)
+        {
+            if (PcamHostGroup.Length == 1)
+            {
+                PhantomCameraHost pcamHost = PcamHostGroup[0];
+                if (_is2D)
+                {
+                    // TODO: Complete 2D Parts
+                }
+                else
+                {
+                    _selectedCamera = pcamHost.camera3D;
+                    _activePcam = pcamHost.GetActivePcame() as PhantomCamera3D;
+                    if (editor)
+                    {
+                        Rid camera3DRid = (_selectedCamera as Camera3D).GetCameraRid();
+                        Subviewport.Disable3D = false;
+                        Subviewport.World3D = pcamHost.camera3D.GetWorld3D();
+                        RenderingServer.ViewportAttachCamera(Subviewport.GetViewportRid(), camera3DRid);
+                    }
+                    if ((_selectedCamera as Camera3D).KeepAspect == Camera3D.KeepAspectEnum.Height)
+                        AspectRatioContainer.StretchMode = AspectRatioContainer.StretchModeEnum.HeightControlsWidth;
+                    else
+                        AspectRatioContainer.StretchMode = AspectRatioContainer.StretchModeEnum.WidthControlsHeight;
+                }
+                _onDeadZoneChanged();
+                SetProcess(true);
 
+                if (!PcamHost.IsConnected("UpdateEditorViewFinder", Callable.From<PhantomCameraHost>(_onUpdateEditorViewfinder)))
+                    PcamHost.Connect("UpdateEditorViewFinder", Callable.From(() => _onUpdateEditorViewfinder(pcamHost)));
+
+                if (!AspectRatioContainer.IsConnected("Resized", Callable.From(_resized)))
+                    AspectRatioContainer.Connect("Resized", Callable.From(_resized));
+
+                if (!_activePcam.IsConnected("DeadZoneChanged", Callable.From(_onDeadZoneChanged)))
+                    _activePcam.Connect("DeadZoneChanged", Callable.From(_onDeadZoneChanged));
+            }
+        }
     }
 
     private void _setViewfinderState()
@@ -367,14 +405,119 @@ public partial class ViewFinder : Control
         _onDeadZoneChanged();
     }
 
-    private void _onDeadZoneChanged()
+    private async void _onDeadZoneChanged()
     {
+        if (!IsInstanceValid(_activePcam))
+            return;
+        if (_activePcam is PhantomCamera2D pcam2D)
+        {
+            // TODO: Complete 2D Parts
+        }
+        else if (_activePcam is PhantomCamera3D pcam3D)
+        {
+            if (pcam3D.followMode != ThreeDimension.FollowMode.FRAMED)
+                return;
 
+            if (CameraViewportPanel.Size.X == 0)
+                await ToSignal(CameraViewportPanel, "Resized");
+
+            if (IsInstanceValid(pcam3D.PcamHostOwner))
+            {
+                PcamHost = pcam3D.PcamHostOwner;
+                if (pcam3D != PcamHost.GetActivePcame())
+                {
+                    _activePcam = PcamHost.GetActivePcame();
+                    GD.Print("Active pcam in viewfinder: ", _activePcam);
+                }
+            }
+
+            float deadZoneWidth = pcam3D.DeadZoneWidth * CameraViewportPanel.Size.X;
+            float deadZoneHeight = pcam3D.DeadZoneHeight * CameraViewportPanel.Size.Y;
+            DeadZoneCenterHbox.CustomMinimumSize = new(deadZoneWidth, 0);
+            DeadZoneCenterCenterPanel.CustomMinimumSize = new(0, deadZoneHeight);
+            DeadZoneLeftCenterPanel.CustomMinimumSize = new(0, deadZoneHeight);
+            DeadZoneRightCenterPanel.CustomMinimumSize = new(0, deadZoneHeight);
+
+            MinHorizontal = .5f - pcam3D.DeadZoneWidth / 2;
+            MaxHorizontal = .5f + pcam3D.DeadZoneWidth / 2;
+            MinVertical = .5f - pcam3D.DeadZoneHeight / 2;
+            MaxVertical = .5f + pcam3D.DeadZoneHeight / 2;
+        }
     }
 
     private void _checkCamera(Node root, Node camera, bool is2D)
     {
+        string cameraString;
+        string pcamString;
+        Color color;
+        //Color colorAlpha;
+        CompressedTexture2D cameraIcon;
+        CompressedTexture2D pcamIcon;
 
+        if (is2D)
+        {
+            cameraString = PhantomCameraConstants.CAMERA_2D_NODE_NAME;
+            pcamString = PhantomCameraConstants.PCAM_2D_NODE_NAME;
+            color = PhantomCameraConstants.COLOR_2D;
+            cameraIcon = _camera2DIcon;
+            pcamIcon = _pcam2DIcon;
+        }
+        else
+        {
+            cameraString = PhantomCameraConstants.CAMERA_3D_NODE_NAME;
+            pcamString = PhantomCameraConstants.PCAM_3D_NODE_NAME;
+            color = PhantomCameraConstants.COLOR_3D;
+            cameraIcon = _camera3DIcon;
+            pcamIcon = _pcam3DIcon;
+        }
+
+        if (camera is not null)
+        {
+            // Has Camera
+            if (camera.GetChildren().Count > 0)
+            {
+                foreach (Node camChild in camera.GetChildren())
+                {
+                    if (camChild is PhantomCameraHost camHost)
+                        PcamHost = camHost;
+
+                    if (PcamHost is not null)
+                    {
+                        if (GetTree().Root.GetNode<PhantomCameraManager>(PhantomCameraConstants.PCAM_MANAGER_NODE_NAME).PhantomCamera2Ds.Length > 0 || GetTree().Root.GetNode<PhantomCameraManager>(PhantomCameraConstants.PCAM_MANAGER_NODE_NAME).PhantomCamera3Ds.Length > 0)
+                        {
+                            // Pcam exists in tree
+                            _setViewfinder(root, true);
+                            _setViewfinderState();
+                            GetNode<Label>("%NoSupportMsg").Visible = false;
+                        }
+                        else
+                        {
+                            // No PCam in scene
+                            _updateButton(pcamString, pcamIcon, color);
+                            _setEmptyViewfinderState(pcamString, pcamIcon);
+                        }
+                    }
+                    else
+                    {
+                        // No PCamHost in scene
+                        _updateButton(PhantomCameraConstants.PCAM_HOST_NODE_NAME, _pcamHostIcon, PhantomCameraConstants.PCAM_HOST_COLOR);
+                        _setEmptyViewfinderState(PhantomCameraConstants.PCAM_HOST_NODE_NAME, _pcamHostIcon);
+                    }
+                }
+            }
+            else
+            {
+                // No PCamHost in scene
+                _updateButton(PhantomCameraConstants.PCAM_HOST_NODE_NAME, _pcamHostIcon, PhantomCameraConstants.PCAM_HOST_COLOR);
+                _setEmptyViewfinderState(PhantomCameraConstants.PCAM_HOST_NODE_NAME, _pcamHostIcon);
+            }
+        }
+        else
+        {
+            // No Camera
+            _updateButton(cameraString, cameraIcon, color);
+            _setEmptyViewfinderState(PhantomCameraConstants.PCAM_HOST_NODE_NAME, _pcamHostIcon);
+        }
     }
 
     private void _updateButton(string text, CompressedTexture2D icon, Color color)
@@ -387,6 +530,50 @@ public partial class ViewFinder : Control
 
     private void _addNode(string nodeType)
     {
+        Node root = EditorInterface.Singleton.GetEditedSceneRoot();
+
+        if (nodeType == _noOpenSceneString)
+            return;
+
+        if (nodeType == PhantomCameraConstants.CAMERA_2D_NODE_NAME)
+        {
+            Camera2D camera = new();
+            _instantiateNode(root, camera, PhantomCameraConstants.CAMERA_2D_NODE_NAME);
+            return;
+        }
+        if (nodeType == PhantomCameraConstants.CAMERA_3D_NODE_NAME)
+        {
+            Camera3D camera = new();
+            _instantiateNode(root, camera, PhantomCameraConstants.CAMERA_3D_NODE_NAME);
+            return;
+        }
+        if (nodeType == PhantomCameraConstants.PCAM_HOST_NODE_NAME)
+        {
+            PhantomCameraHost camera = new();
+            PcamHost.Name = PhantomCameraConstants.PCAM_HOST_NODE_NAME;
+            if (_is2D)
+            {
+                // TODO: Complete The 2D part
+            }
+            else
+            {
+                GetTree().EditedSceneRoot.GetViewport().GetCamera3D().AddChild(PcamHost);
+                PcamHost.Owner = GetTree().EditedSceneRoot;
+            }
+            return;
+        }
+        if (nodeType == PhantomCameraConstants.PCAM_2D_NODE_NAME)
+        {
+            PhantomCamera2D pcam2D = new();
+            _instantiateNode(root, pcam2D, PhantomCameraConstants.PCAM_2D_NODE_NAME);
+            return;
+        }
+        if (nodeType == PhantomCameraConstants.PCAM_3D_NODE_NAME)
+        {
+            PhantomCamera3D pcam3D = new();
+            _instantiateNode(root, pcam3D, PhantomCameraConstants.PCAM_3D_NODE_NAME);
+            return;
+        }
 
     }
 
