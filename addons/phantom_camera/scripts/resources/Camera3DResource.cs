@@ -1,6 +1,5 @@
 using Godot;
 using Godot.Collections;
-using System;
 
 namespace PhantomCamera.Resources;
 
@@ -25,7 +24,7 @@ public enum ProjectionType : byte
 /// The overrides defined here will be applied to the [Camera3D] upon the
 /// [PhantomCamera3D] becoming active.
 /// </summary>
-[Icon("res://addons/phantom_camera/icons/phantom_camera_camera_3d_resource.svg")]
+[GlobalClass, Tool, Icon("res://addons/phantom_camera/icons/phantom_camera_camera_3d_resource.svg")]
 public partial class Camera3DResource : Resource
 {
 

@@ -16,6 +16,9 @@ public partial class Plugin : EditorPlugin
 	private const string PCAM_2D = "PhantomCamera2D";
 	private const string PCAM_3D = "PhantomCamera3D";
 
+	private const string CAMERA_3D_RESOURCE = "Camera3DResource";
+	private const string TWEEN_RESOURCE = "TweenResource";
+
 	private const string EDITOR_PANEL_PATH = "res://addons/phantom_camera/panel/editor.tscn";
 
 	private readonly StringName PHANTOM_CAMERA_MANAGER = "PhantomCameraManager";
@@ -41,6 +44,9 @@ public partial class Plugin : EditorPlugin
 		//AddCustomType(PCAM_2D,"Node2D",GD.Load<Script>("res://addons/phantom_camera/scripts/phantom camera/PhantomCamera2D.cs"),GD.Load<Texture2D>("res://addons/phantom_camera/icons/phantom_camera_2d.svg"));
 		AddCustomType(PCAM_3D, "Node3D", GD.Load<Script>("res://addons/phantom_camera/scripts/phantom camera/PhantomCamera3D.cs"), GD.Load<Texture2D>("res://addons/phantom_camera/icons/phantom_camera_3d.svg"));
 		AddCustomType(PCAM_HOST, "Node", GD.Load<Script>("res://addons/phantom_camera/scripts/phantom camera host/PhantomCameraHost.cs"), GD.Load<Texture2D>("res://addons/phantom_camera/icons/phantom_camera_host.svg"));
+
+		AddCustomType(TWEEN_RESOURCE, "Resource", GD.Load<Script>("res://addons/phantom_camera/scripts/resources/TweenResource.cs"), GD.Load<Texture2D>("res://addons/phantom_camera/icons/phantom_camera_tween.svg"));
+		AddCustomType(CAMERA_3D_RESOURCE, "Resource", GD.Load<Script>("res://addons/phantom_camera/scripts/resources/Camera3DResource.cs"), GD.Load<Texture2D>("res://addons/phantom_camera/icons/phantom_camera_camera_3d_resource.svg"));
 
 		// Phantom Camera 3D Gizmo
 		AddNode3DGizmoPlugin(_pcam3DGizmoPlugin);
@@ -78,6 +84,9 @@ public partial class Plugin : EditorPlugin
 		//RemoveCustomType(PCAM_2D);
 		RemoveCustomType(PCAM_3D);
 		RemoveCustomType(PCAM_HOST);
+
+		RemoveCustomType(CAMERA_3D_RESOURCE);
+		RemoveCustomType(TWEEN_RESOURCE);
 
 		RemoveAutoloadSingleton(PHANTOM_CAMERA_MANAGER);
 	}

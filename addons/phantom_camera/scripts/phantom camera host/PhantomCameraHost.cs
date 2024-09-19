@@ -22,8 +22,7 @@ public enum InterpolationMode
 /// PhantomCameraHost. It is what determines which [param PhantomCamera] should
 /// be active.
 /// </summary>
-[Tool]
-[Icon("res://addons/phantom_camera/icons/phantom_camera_host.svg")]
+[Tool, Icon("res://addons/phantom_camera/icons/phantom_camera_host.svg")]
 public partial class PhantomCameraHost : Node
 {
 
@@ -935,7 +934,7 @@ public partial class PhantomCameraHost : Node
             Quaternion prevActivePcam3DQuat = new(_prev_active_pcam_3D_transform.Basis.Orthonormalized());
             camera3D.Quaternion = Tween.InterpolateValue(
                 prevActivePcam3DQuat,
-                (prevActivePcam3DQuat.Inverse() * new Quaternion(_active_pcam_3d_glob_transform.Basis.Orthonormalized())) - prevActivePcam3DQuat,
+                prevActivePcam3DQuat.Inverse() * new Quaternion(_active_pcam_3d_glob_transform.Basis.Orthonormalized()),
                 _tween_elapsed_time,
                 _active_pcam_3d.TweenDuration,
                 (Tween.TransitionType)_active_pcam_3d.TweenTransition,

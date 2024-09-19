@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="TweenResource" load_steps=2 format=3 uid="uid://dyu30yopfl57v"]
+
+[ext_resource type="Script" path="res://addons/phantom_camera/scripts/resources/TweenResource.cs" id="1_hygqh"]
+
+[resource]
+script = ExtResource("1_hygqh")
+duration = 2.0
+transition = 3
+ease = 2

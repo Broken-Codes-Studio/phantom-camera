@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Godot;
 using Godot.Collections;
-using PhantomCamera.Resources;
 
 namespace PhantomCamera.ThreeDimension;
+
+using Resources;
 
 #region Enums
 /// <summary>
@@ -99,8 +100,7 @@ public enum InactiveUpdateMode
 /// [param PhantomCamera3D] with the highest priority.
 /// Each instance can have different positional and rotational logic applied to them.
 /// </summary>
-[Icon("res://addons/phantom_camera/icons/phantom_camera_3d.svg")]
-[Tool]
+[Tool, Icon("res://addons/phantom_camera/icons/phantom_camera_3d.svg")]
 public partial class PhantomCamera3D : Node3D
 {
     #region Signals
@@ -466,7 +466,7 @@ public partial class PhantomCamera3D : Node3D
     /// transition, [param easeInOut] ease with a [param 1s] duration.
     /// </summary>
     [Export]
-    public PhantomCameraTween TweenResource { get; set; } = new();
+    public TweenResource TweenResource = new();
 
     public float TweenDuration
     {
@@ -1218,8 +1218,8 @@ public partial class PhantomCamera3D : Node3D
                         return;
                     }
 
-                    ViewportPosition = GetViewport().GetCamera3D().UnprojectPosition(_getPositionOffsetDistance());
-                    Vector2 visibleRectSize = GetViewport().GetViewport().GetVisibleRect().Size;
+                    ViewportPosition = GetViewport().GetCamera3D().UnprojectPosition(_getTargetPositionOffset());
+                    Vector2 visibleRectSize = GetViewport().GetVisibleRect().Size;
 
                     ViewportPosition /= visibleRectSize;
                     _currentRotation = GlobalRotation;
@@ -1246,6 +1246,21 @@ public partial class PhantomCamera3D : Node3D
                             }
                             else
                                 followPosition = _getPositionOffsetDistance();
+                        }
+                        else
+                        {
+                            if (_currentRotation != GlobalRotation)
+                            {
+                                float opposite = Mathf.Sin(-GlobalRotation.X) * FollowDistance + _getTargetPositionOffset().Y;
+                                gloPos.Y = _getTargetPositionOffset().Y + opposite;
+                                gloPos.Z = Mathf.Sqrt(Mathf.Pow(FollowDistance, 2) - Mathf.Pow(opposite, 2)) + _getTargetPositionOffset().Z;
+                                gloPos.X = GlobalPosition.X;
+
+                                followPosition = gloPos;
+                                _currentRotation = GlobalRotation;
+                            }
+                            else
+                                followPosition = targetPosition;
                         }
                     }
                     else
@@ -1468,7 +1483,7 @@ public partial class PhantomCamera3D : Node3D
 
         if (ViewportPosition.Y < .5f - DeadZoneHeight / 2)
             // Is Outside top edge
-            frameOutBounds.Y = -1;
+            frameOutBounds.Y = 1;
 
         if (ViewportPosition.X > .5f + DeadZoneWidth / 2)
             // Is Outside right edge
@@ -1476,7 +1491,7 @@ public partial class PhantomCamera3D : Node3D
 
         if (ViewportPosition.Y < .5001f + DeadZoneHeight / 2) // 0.501 to resolve an issue where the bottom vertical Dead Zone never becoming 0 when the Dead Zone Vertical parameter is set to 0
             // Is Outside bottom edge
-            frameOutBounds.Y = 1;
+            frameOutBounds.Y = -1;
 
         return frameOutBounds;
 

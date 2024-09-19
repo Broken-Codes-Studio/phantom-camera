@@ -79,8 +79,8 @@ public enum EaseType : byte
 /// Changing the tween values for a given [param PhantomCamera] determines how
 /// transitioning to that instance will look like.
 /// </summary>
-[Icon("res://addons/phantom_camera/icons/phantom_camera_tween.svg")]
-public partial class PhantomCameraTween : Resource
+[GlobalClass, Tool, Icon("res://addons/phantom_camera/icons/phantom_camera_tween.svg")]
+public partial class TweenResource : Resource
 {
     /// <summary>
     /// The time it takes to tween to this PhantomCamera in [param seconds].
@@ -99,10 +99,5 @@ public partial class PhantomCameraTween : Resource
     /// </summary>
     [Export]
     public EaseType ease { get; set; } = EaseType.EASE_IN_OUT;
-
-    public PhantomCameraTween()
-    {
-
-    }
 
 }
