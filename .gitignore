@@ -4,7 +4,6 @@ project.godot
 .idea/
 *.zip
 
-/.import
 /.vscode
 /.vs
 /default_env.tres
