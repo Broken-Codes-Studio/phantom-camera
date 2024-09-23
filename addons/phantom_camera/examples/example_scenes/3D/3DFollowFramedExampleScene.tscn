@@ -1,15 +1,15 @@
 [gd_scene load_steps=10 format=3 uid="uid://c4llb3gsbfv1a"]
 
-[ext_resource type="Script" path="res://addons/phantom_camera/scripts/phantom camera host/PhantomCameraHost.cs" id="1_7824u"]
-[ext_resource type="Script" path="res://addons/phantom_camera/scripts/phantom camera/PhantomCamera3D.cs" id="2_g1bv4"]
-[ext_resource type="Resource" uid="uid://dyu30yopfl57v" path="res://addons/phantom_camera/examples/resources/tween/playerPhantomCamera3DTween.tres" id="3_yircm"]
-[ext_resource type="Script" path="res://addons/phantom_camera/scripts/resources/Camera3DResource.cs" id="4_dj2pw"]
-[ext_resource type="PackedScene" uid="uid://cixlwqycoox8h" path="res://addons/phantom_camera/examples/models/3d_cube_dark.tscn" id="4_t4fso"]
-[ext_resource type="Texture2D" uid="uid://c7ja4woxol8yc" path="res://addons/phantom_camera/examples/textures/3D/checker_pattern_dark.png" id="5_c0upu"]
-[ext_resource type="PackedScene" uid="uid://bulsh7s0ibmao" path="res://addons/phantom_camera/examples/example_scenes/3D/sub_scenes/playable_character_3d.tscn" id="5_f2w3x"]
+[ext_resource type="Script" path="res://addons/phantom_camera/scripts/phantom camera host/PhantomCameraHost.cs" id="1_okv33"]
+[ext_resource type="Script" path="res://addons/phantom_camera/scripts/phantom camera/PhantomCamera3D.cs" id="2_0pn3r"]
+[ext_resource type="Resource" uid="uid://dyu30yopfl57v" path="res://addons/phantom_camera/examples/resources/tween/playerPhantomCamera3DTween.tres" id="3_ypv1p"]
+[ext_resource type="Script" path="res://addons/phantom_camera/scripts/resources/Camera3DResource.cs" id="4_yijwh"]
+[ext_resource type="PackedScene" uid="uid://bulsh7s0ibmao" path="res://addons/phantom_camera/examples/example_scenes/3D/sub_scenes/playableCharacter3D.tscn" id="5_13hbs"]
+[ext_resource type="PackedScene" uid="uid://cixlwqycoox8h" path="res://addons/phantom_camera/examples/models/3d_cube_dark.tscn" id="6_n5rum"]
+[ext_resource type="Texture2D" uid="uid://c7ja4woxol8yc" path="res://addons/phantom_camera/examples/textures/3D/checker_pattern_dark.png" id="7_xwanr"]
 
 [sub_resource type="Resource" id="Resource_xyu5i"]
-script = ExtResource("4_dj2pw")
+script = ExtResource("4_yijwh")
 CullMask = 1048575
 H_Offset = 0.0
 V_Offset = 0.0
@@ -21,7 +21,7 @@ Near = 0.05
 Far = 4000.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_auy8m"]
-albedo_texture = ExtResource("5_c0upu")
+albedo_texture = ExtResource("7_xwanr")
 uv1_triplanar = true
 uv1_world_triplanar = true
 
@@ -32,7 +32,7 @@ unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 3.5, 5)
 
 [node name="PhantomCameraHost" type="Node" parent="MainCamera3D"]
-script = ExtResource("1_7824u")
+script = ExtResource("1_okv33")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 8, 0)
@@ -43,10 +43,10 @@ metadata/_edit_lock_ = true
 [node name="PlayerPhantomCamera3D" type="Node3D" parent="Player" node_paths=PackedStringArray("FollowTarget")]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 3.5, 5)
-script = ExtResource("2_g1bv4")
+script = ExtResource("2_0pn3r")
 followMode = 5
 FollowTarget = NodePath("../PlayerCharacterBody3D2/PlayerVisual")
-TweenResource = ExtResource("3_yircm")
+TweenResource = ExtResource("3_ypv1p")
 camera3DResource = SubResource("Resource_xyu5i")
 FollowDamping = true
 FollowDistance = 4.0
@@ -54,12 +54,12 @@ DeadZoneWidth = 0.35
 DeadZoneHeight = 0.6
 SpringLength = 4.0
 
-[node name="PlayerCharacterBody3D2" parent="Player" instance=ExtResource("5_f2w3x")]
+[node name="PlayerCharacterBody3D2" parent="Player" instance=ExtResource("5_13hbs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 
 [node name="Environment" type="Node" parent="."]
 
-[node name="Floor" parent="Environment" instance=ExtResource("4_t4fso")]
+[node name="Floor" parent="Environment" instance=ExtResource("6_n5rum")]
 transform = Transform3D(1000, 0, 0, 0, 1, 0, 0, 0, 1000, 0, -1, 0)
 metadata/_edit_lock_ = true
 

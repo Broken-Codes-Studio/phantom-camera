@@ -1,6 +1,8 @@
 using Godot;
 using System;
 
+namespace PhantomCamera.Example;
+
 public partial class PlayerController : CharacterBody3D
 {
 	[Export]
@@ -48,6 +50,8 @@ public partial class PlayerController : CharacterBody3D
 			velocity.Y = JumpVelocity;
 		}
 
+		Vector3 camDir = _camera.GlobalTransform.Basis.Z;
+
 		// Get the input direction and handle the movement/deceleration.
 		// As good practice, you should replace UI actions with custom gameplay actions.
 		Vector2 inputDir = Input.GetVector("ui_left", "ui_right", "ui_up", "ui_down");
@@ -55,8 +59,16 @@ public partial class PlayerController : CharacterBody3D
 		Vector3 direction = (Transform.Basis * new Vector3(inputDir.X, 0, inputDir.Y)).Normalized();
 		if (direction != Vector3.Zero)
 		{
-			velocity.X = direction.X * Speed;
-			velocity.Z = direction.Z * Speed;
+
+			Vector3 moveDir = Vector3.Zero;
+
+			moveDir.X = direction.X;
+			moveDir.Z = direction.Z;
+
+			moveDir = moveDir.Rotated(Vector3.Up, _camera.Rotation.Y).Normalized();
+
+			velocity.X = moveDir.X * Speed;
+			velocity.Z = moveDir.Z * Speed;
 		}
 		else
 		{

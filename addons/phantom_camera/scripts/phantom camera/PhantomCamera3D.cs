@@ -736,6 +736,54 @@ public partial class PhantomCamera3D : Node3D
     [Export]
     public float AutoFollowDistanceDivisor { get; set; } = 10f;
 
+
+    private SpringArm3D _followSpringArm = null;
+
+    public Vector3 ThirdPersonRotation
+    {
+        get
+        {
+            if (_followSpringArm is not null && IsInstanceValid(_followSpringArm))
+                return _followSpringArm.Rotation;
+            return Vector3.Zero;
+        }
+        set
+        {
+            if (_followSpringArm is not null && IsInstanceValid(_followSpringArm))
+                _followSpringArm.Rotation = value;
+        }
+    }
+
+    public Vector3 ThirdPersonRotationDegrees
+    {
+        get
+        {
+            if (_followSpringArm is not null && IsInstanceValid(_followSpringArm))
+                return _followSpringArm.RotationDegrees;
+            return Vector3.Zero;
+        }
+        set
+        {
+            if (_followSpringArm is not null && IsInstanceValid(_followSpringArm))
+                _followSpringArm.RotationDegrees = value;
+        }
+    }
+
+    public Quaternion ThirdPersonQuaternion
+    {
+        get
+        {
+            if (_followSpringArm is not null && IsInstanceValid(_followSpringArm))
+                return _followSpringArm.Quaternion;
+            return Quaternion.Identity;
+        }
+        set
+        {
+            if (_followSpringArm is not null && IsInstanceValid(_followSpringArm))
+                _followSpringArm.Quaternion = value;
+        }
+    }
+
     private float _deadZoneWidth = 0f;
     /// <summary>
     /// Defines the horizontal dead zone area. While the target is within it, the
@@ -900,8 +948,6 @@ public partial class PhantomCamera3D : Node3D
 
     private bool _followFramedInitialSet = false;
     private Vector3 _followFramedOffset = Vector3.Zero;
-
-    private SpringArm3D _followSpringArm = null;
 
     private Vector3 _currentRotation = Vector3.Zero;
 
@@ -1081,8 +1127,8 @@ public partial class PhantomCamera3D : Node3D
                 _followSpringArm.CollisionMask = CollisionMask;
                 _followSpringArm.Shape = Shape;
                 _followSpringArm.Margin = Margin;
-                GetParent().CallDeferred("AddChild", _followSpringArm);
-                CallDeferred("Reparent", _followSpringArm);
+                GetParent().CallDeferred("add_child", _followSpringArm);
+                CallDeferred("reparent", _followSpringArm);
             }
         }
         else if (followMode == FollowMode.FRAMED)
